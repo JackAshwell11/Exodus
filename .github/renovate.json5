@@ -1,62 +1,74 @@
 {
-  // Schema for validation and editor support
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
-
-  // Safe defaults for Conan projects
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "config:recommended",       // Sensible Renovate defaults
-    ":disableMajorUpdates",     // Avoid breaking ABI/API changes
-    ":semanticCommitsDisabled"  // Disable semantic commit messages
+    'config:recommended',
+    ':disableMajorUpdates',
+    ':semanticCommitsDisabled',
   ],
-
-  // Central dashboard issue for all dependency updates
   dependencyDashboard: true,
-
-  // Limit PR volume to reduce CI and review noise
   prHourlyLimit: 1,
   prConcurrentLimit: 3,
-
-  // Enable relevant package managers
   conan: {
-    enabled: true
+    enabled: true,
   },
-  python: {
-    enabled: true
+  'github-actions': {
+    enabled: true,
   },
-  "github-actions": {
-    enabled: true
-  },
-
-  // Custom package rules for Conan dependencies
   packageRules: [
     {
-      // Configure Python to scan pyproject.toml
-      matchManagers: ["pep621"],
-      matchFileNames: ["pyproject.toml"],
+      matchCategories: [
+        'python',
+      ],
+      enabled: true,
     },
     {
-      // Group patch + minor Conan updates into one PR
-      matchManagers: ["conan"],
-      matchUpdateTypes: ["patch", "minor"],
-      groupName: "Conan dependency updates",
+      matchManagers: [
+        'pep621',
+      ],
+      matchFileNames: [
+        'pyproject.toml',
+      ],
     },
     {
-      // Group all Python dependency updates together
-      matchManagers: ["pep621"],
-      matchUpdateTypes: ["patch", "minor"],
-      groupName: "Python dependency updates",
+      matchManagers: [
+        'conan',
+      ],
+      matchUpdateTypes: [
+        'patch',
+        'minor',
+      ],
+      groupName: 'Conan dependency updates',
     },
     {
-      // Group all GitHub Actions updates
-      matchManagers: ["github-actions"],
-      matchUpdateTypes: ["patch", "minor"],
-      groupName: "GitHub Actions updates",
+      matchManagers: [
+        'pep621',
+      ],
+      matchUpdateTypes: [
+        'patch',
+        'minor',
+      ],
+      groupName: 'Python dependency updates',
     },
     {
-      // Never auto-open major update PRs
-      matchManagers: ["conan", "pep621", "github-actions"],
-      matchUpdateTypes: ["major"],
+      matchManagers: [
+        'github-actions',
+      ],
+      matchUpdateTypes: [
+        'patch',
+        'minor',
+      ],
+      groupName: 'GitHub Actions updates',
+    },
+    {
+      matchManagers: [
+        'conan',
+        'pep621',
+        'github-actions',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
       enabled: false,
-    }
+    },
   ],
 }
