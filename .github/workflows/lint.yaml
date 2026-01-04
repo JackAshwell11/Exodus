@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.1
+      - name: Set up CMake
+        uses: lukka/get-cmake@v4.2.0
+      - name: Configure CMake
+        run: |
+          pip install conan
+          cmake --preset Debug
+      - name: Run cpp-linter
+        uses: cpp-linter/cpp-linter-action@v2
+        with:
+          style: 'file'
+          tidy-checks: ''
+          database: ./build/build-debug
+          ignore: 'build'
+          version: '18'

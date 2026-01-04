@@ -1,0 +1,33 @@
+Checks: "
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+
+  cert-*,
+
+  clang-analyzer-*,
+
+  cppcoreguidelines-*,
+
+  google-*,
+
+  hicpp-*,
+
+  misc-*,
+  -misc-include-cleaner,
+
+  modernize-*,
+
+  performance-*,
+
+  portability-*,
+
+  readability-*,
+"
+WarningsAsErrors: "*"
+CheckOptions:
+  - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: 1
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: "^[ijkxy_]$"
+  - key: readability-identifier-length.IgnoredLoopCounterNames
+    value: "^[ijkxy_]$"
