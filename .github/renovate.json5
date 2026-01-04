@@ -21,8 +21,7 @@
     enabled: true
   },
   python: {
-    enabled: true,
-    fileMatch: ["pyproject.toml"]
+    enabled: true
   },
   "github-actions": {
     enabled: true
@@ -31,6 +30,11 @@
   // Custom package rules for Conan dependencies
   packageRules: [
     {
+      // Configure Python to scan pyproject.toml
+      matchManagers: ["pep621"],
+      matchFileNames: ["pyproject.toml"],
+    },
+    {
       // Group patch + minor Conan updates into one PR
       matchManagers: ["conan"],
       matchUpdateTypes: ["patch", "minor"],
@@ -38,7 +42,7 @@
     },
     {
       // Group all Python dependency updates together
-      matchManagers: ["python"],
+      matchManagers: ["pep621"],
       matchUpdateTypes: ["patch", "minor"],
       groupName: "Python dependency updates",
     },
@@ -50,7 +54,7 @@
     },
     {
       // Never auto-open major update PRs
-      matchManagers: ["conan", "python", "github-actions"],
+      matchManagers: ["conan", "pep621", "github-actions"],
       matchUpdateTypes: ["major"],
       enabled: false,
     }
