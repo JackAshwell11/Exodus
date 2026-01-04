@@ -1,0 +1,58 @@
+{
+  // Schema for validation and editor support
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Safe defaults for Conan projects
+  extends: [
+    "config:recommended",       // Sensible Renovate defaults
+    ":disableMajorUpdates",     // Avoid breaking ABI/API changes
+    ":semanticCommitsDisabled"  // Disable semantic commit messages
+  ],
+
+  // Central dashboard issue for all dependency updates
+  dependencyDashboard: true,
+
+  // Limit PR volume to reduce CI and review noise
+  prHourlyLimit: 1,
+  prConcurrentLimit: 3,
+
+  // Enable relevant package managers
+  conan: {
+    enabled: true
+  },
+  python: {
+    enabled: true,
+    fileMatch: ["pyproject.toml"]
+  },
+  "github-actions": {
+    enabled: true
+  },
+
+  // Custom package rules for Conan dependencies
+  packageRules: [
+    {
+      // Group patch + minor Conan updates into one PR
+      matchManagers: ["conan"],
+      matchUpdateTypes: ["patch", "minor"],
+      groupName: "Conan dependency updates",
+    },
+    {
+      // Group all Python dependency updates together
+      matchManagers: ["python"],
+      matchUpdateTypes: ["patch", "minor"],
+      groupName: "Python dependency updates",
+    },
+    {
+      // Group all GitHub Actions updates
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["patch", "minor"],
+      groupName: "GitHub Actions updates",
+    },
+    {
+      // Never auto-open major update PRs
+      matchManagers: ["conan", "python", "github-actions"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    }
+  ],
+}

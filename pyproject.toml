@@ -1,0 +1,21 @@
+[project]
+authors = [
+    {name = "JackAshwell11", email = "jack.ashwell1@gmail.com"}
+]
+dependencies = []
+description = """
+A top-down procedural exploration and progression game where the player gathers resources,
+constructs machines, and builds a complex escape structure in a hostile, endless world.
+"""
+license = {file = "LICENSE"}
+name = "Exodus"
+readme = "README.md"
+requires-python = ">=3.12"
+version = "0.1.0"
+
+[project.urls]
+Homepage = "https://github.com/JackAshwell11/Exodus"
+Repository = "https://github.com/JackAshwell11/Exodus"
+
+[tool.uv]
+prerelease = "allow"

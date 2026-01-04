@@ -1,0 +1,53 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.1
+      - name: Set up CMake
+        uses: lukka/get-cmake@v4.2.0
+      - name: Cache Conan
+        uses: actions/cache@v5.0.1
+        with:
+          path: ~/.conan2
+          key: conan-${{ runner.os }}-${{ hashFiles('**/conanfile.*') }}
+      - name: Set up MSVC
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1.13.0
+      - name: Build C++ project
+        run: |
+          pip install conan
+          cmake --preset Debug
+          cmake --build build-debug
+      - name: Run CTest
+        run: |
+          ctest --output-on-failure --no-tests=error
+      - name: Generate the coverage report
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pip install gcovr
+          gcovr -r ${{ github.workspace }} \
+                --exclude build-debug \
+                --exclude tests \
+                --coveralls coverage.json
+      - name: Upload coverage report
+        if: matrix.os == 'ubuntu-latest'
+        uses: coverallsapp/github-action@v2.3.7
+        with:
+          file: coverage.json
+          flag-name: run-cpp-${{ matrix.os }}
