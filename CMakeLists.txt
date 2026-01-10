@@ -14,12 +14,17 @@ set(ENABLE_SANITIZERS ON CACHE BOOL "Enable sanitizers for GCC/Clang")
 set(DO_TESTS ON CACHE BOOL "Enable testing")
 
 # Initialise the project
-project(exodus LANGUAGES CXX)
+project(exodus LANGUAGES C CXX)
 
 # Include the required modules
 include(CTest)
 
 # Find the required packages
+find_package(sdl2 REQUIRED)
+
+# Add external libraries
+add_library(glad STATIC external/glad/src/gl.c)
+target_include_directories(glad SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include)
 
 # Set the warning level for the project
 if (MSVC)

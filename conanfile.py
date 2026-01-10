@@ -21,3 +21,5 @@ class Exodus(ConanFile):  # type: ignore[misc]
 
     def requirements(self: ConanFile) -> None:
         """Add the required dependencies to the Conan configuration."""
+        self.requires("sdl/2.32.10")
+
