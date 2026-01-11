@@ -22,4 +22,8 @@ class Exodus(ConanFile):  # type: ignore[misc]
     def requirements(self: ConanFile) -> None:
         """Add the required dependencies to the Conan configuration."""
         self.requires("sdl/2.32.10")
+        self.requires("gtest/1.17.0")
 
+    def configure(self: ConanFile) -> None:
+        """Configure the Conan options for the dependencies."""
+        self.options["sdl"].pulse = False

@@ -1,18 +1,30 @@
-# Add source files for the exodus executable
-add_executable(exodus main.cpp)
-
-# Link the required libraries
-target_link_libraries(exodus PRIVATE
-    SDL2::SDL2
-    glad
+# Create the static library for the engine
+add_library(exodus_engine STATIC
+        ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
+        ${CMAKE_SOURCE_DIR}/src/engine.cpp
+)
+target_include_directories(exodus_engine PUBLIC
+        ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(exodus_engine PUBLIC
+        SDL2::SDL2
+        glad
 )
 
 # Link the OpenGL library based on the platform
 if (WIN32)
-    target_link_libraries(exodus PRIVATE opengl32)
+    target_link_libraries(exodus_engine PUBLIC opengl32)
 elseif (APPLE)
     find_library(OpenGL_LIBRARY OpenGL)
-    target_link_libraries(exodus PRIVATE ${OpenGL_LIBRARY})
-else()
-    target_link_libraries(exodus PRIVATE GL)
-endif()
+    target_link_libraries(exodus_engine PUBLIC ${OpenGL_LIBRARY})
+else ()
+    target_link_libraries(exodus_engine PUBLIC GL)
+endif ()
+
+# Create the exodus executable and link it with the required libraries
+add_executable(exodus
+        ${CMAKE_SOURCE_DIR}/src/main.cpp
+)
+target_link_libraries(exodus PRIVATE
+        exodus_engine
+)

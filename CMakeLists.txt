@@ -20,11 +20,8 @@ project(exodus LANGUAGES C CXX)
 include(CTest)
 
 # Find the required packages
-find_package(sdl2 REQUIRED)
-
-# Add external libraries
-add_library(glad STATIC external/glad/src/gl.c)
-target_include_directories(glad SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
 # Set the warning level for the project
 if (MSVC)
@@ -58,6 +55,9 @@ if (ENABLE_SANITIZERS)
 else ()
     message(STATUS "Sanitizers disabled (ENABLE_SANITIZERS is not set)")
 endif ()
+
+# Add external libraries
+add_subdirectory(external)
 
 # Add the subdirectories for the different parts of the project
 add_subdirectory(src)
