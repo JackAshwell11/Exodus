@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install conan
           cmake --preset Debug
-          cmake --build build/build-debug/
+          cmake --build build/debug/
       - name: Run CTest
         run: |
           ctest --output-on-failure --no-tests=error
@@ -42,7 +42,7 @@ jobs:
         run: |
           pip install gcovr
           gcovr -r ${{ github.workspace }} \
-                --exclude build/build-debug \
+                --exclude build/debug \
                 --exclude tests \
                 --coveralls coverage.json
       - name: Upload coverage report

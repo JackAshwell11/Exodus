@@ -6,7 +6,7 @@
   },
   "configurePresets": [
     {
-      "binaryDir": "${sourceDir}/build/build-debug",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
@@ -15,7 +15,7 @@
       "name": "Debug"
     },
     {
-      "binaryDir": "${sourceDir}/build/build-release",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "ENABLE_COVERAGE": "OFF",
@@ -24,6 +24,17 @@
       "description": "Release build",
       "generator": "Ninja",
       "name": "Release"
+    },
+    {
+      "binaryDir": "${sourceDir}/build/relWithDebInfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ENABLE_COVERAGE": "OFF",
+        "ENABLE_SANITIZERS": "OFF"
+      },
+      "description": "Release build with debug info",
+      "generator": "Ninja",
+      "name": "RelWithDebInfo"
     }
   ],
   "version": 3
