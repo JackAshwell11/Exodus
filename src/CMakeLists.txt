@@ -1,14 +1,20 @@
 # Create the static library for the engine
 add_library(exodus_engine STATIC
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement_system.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/render_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
+        ${CMAKE_SOURCE_DIR}/src/asset_manager.cpp
         ${CMAKE_SOURCE_DIR}/src/engine.cpp
 )
 target_include_directories(exodus_engine PUBLIC
         ${CMAKE_SOURCE_DIR}/include
 )
+target_compile_definitions(exodus_engine PRIVATE
+        EXODUS_ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
+)
 target_link_libraries(exodus_engine PUBLIC
         SDL2::SDL2
+        SDL2_image::SDL2_image
         glad
 )
 
@@ -29,3 +35,4 @@ add_executable(exodus
 target_link_libraries(exodus PRIVATE
         exodus_engine
 )
+

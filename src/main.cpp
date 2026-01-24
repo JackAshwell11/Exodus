@@ -89,6 +89,7 @@ auto main() -> int {
       accumulator -= FIXED_TIMESTEP;
     }
     engine.update(deltaTime);
+    engine.render();
     SDL_GL_SwapWindow(window);
   }
 

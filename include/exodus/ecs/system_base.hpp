@@ -37,6 +37,9 @@ class SystemBase {
   /// Process fixed update logic for a system.
   virtual void fixed_update(double /*delta_time*/) const {}
 
+  /// Process rendering logic for a system.
+  virtual void render() const {}
+
  protected:
   /// The registry that manages the game objects, components, and systems.
   Registry* registry_;
