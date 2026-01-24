@@ -1,23 +1,25 @@
 // Ensure this file is only included once
 #pragma once
 
+namespace exodus::ecs {
 /// The base class for all components.
 struct ComponentBase {
-  /// The copy assignment operator.
-  auto operator=(const ComponentBase&) -> ComponentBase& = default;
-
-  /// The move assignment operator.
-  auto operator=(ComponentBase&&) -> ComponentBase& = default;
-
-  /// The default constructor.
+  /// Construct a component.
   ComponentBase() = default;
 
-  /// The virtual destructor.
+  /// Destroy the component.
   virtual ~ComponentBase() = default;
 
-  /// The copy constructor.
-  ComponentBase(const ComponentBase&) = default;
+  /// Deleted copy constructor to prevent object slicing.
+  ComponentBase(const ComponentBase&) = delete;
 
-  /// The move constructor.
-  ComponentBase(ComponentBase&&) = default;
+  /// Deleted copy assignment to prevent object slicing.
+  auto operator=(const ComponentBase&) -> ComponentBase& = delete;
+
+  /// Deleted move constructor to prevent object slicing.
+  ComponentBase(ComponentBase&&) = delete;
+
+  /// Deleted move assignment to prevent object slicing.
+  auto operator=(ComponentBase&&) -> ComponentBase& = delete;
 };
+}  // namespace exodus::ecs

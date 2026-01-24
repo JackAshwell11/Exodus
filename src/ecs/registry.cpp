@@ -17,9 +17,9 @@ auto type_name_from_info(const std::type_info& info) -> std::string {
 #endif
 }
 
-auto Registry::create_game_object(const GameObjectType game_object_type) -> GameObjectID {
+auto Registry::create_game_object(const exodus::GameObjectType game_object_type) -> exodus::GameObjectID {
   // Get the game object ID to use
-  GameObjectID game_object_id{0};
+  exodus::GameObjectID game_object_id{0};
   if (!recycled_ids_.empty()) {
     // Reuse a recycled ID if available
     game_object_id = recycled_ids_.front();
@@ -36,7 +36,7 @@ auto Registry::create_game_object(const GameObjectType game_object_type) -> Game
   return game_object_id;
 }
 
-void Registry::delete_game_object(const GameObjectID game_object_id) {
+void Registry::delete_game_object(const exodus::GameObjectID game_object_id) {
   // Check if the game object is registered or not
   if (!has_game_object(game_object_id)) {
     throw RegistryError(game_object_id);
@@ -51,8 +51,8 @@ void Registry::delete_game_object(const GameObjectID game_object_id) {
   recycled_ids_.push(game_object_id);
 }
 
-void Registry::clear_game_objects(const std::unordered_set<GameObjectID>& game_object_ids_to_preserve) {
-  std::unordered_set<GameObjectID> ids_to_delete;
+void Registry::clear_game_objects(const std::unordered_set<exodus::GameObjectID>& game_object_ids_to_preserve) {
+  std::unordered_set<exodus::GameObjectID> ids_to_delete;
   for (const auto& game_object_id : game_object_types_ | std::views::keys) {
     if (!game_object_ids_to_preserve.contains(game_object_id)) {
       ids_to_delete.insert(game_object_id);
@@ -63,28 +63,44 @@ void Registry::clear_game_objects(const std::unordered_set<GameObjectID>& game_o
   }
 }
 
-auto Registry::has_game_object(const GameObjectID game_object_id) const -> bool {
+auto Registry::has_game_object(const exodus::GameObjectID game_object_id) const -> bool {
   return game_object_types_.contains(game_object_id);
 }
 
-auto Registry::get_game_object_type(const GameObjectID game_object_id) const -> GameObjectType {
+auto Registry::get_game_object_type(const exodus::GameObjectID game_object_id) const -> exodus::GameObjectType {
   if (!game_object_types_.contains(game_object_id)) {
     throw RegistryError(game_object_id);
   }
   return game_object_types_.at(game_object_id);
 }
 
-auto Registry::get_game_object_ids(const GameObjectType game_object_type) const -> std::vector<GameObjectID> {
+auto Registry::get_game_object_ids(const exodus::GameObjectType game_object_type) const
+    -> std::vector<exodus::GameObjectID> {
   const auto ids{game_object_ids_.find(game_object_type)};
-  return ids != game_object_ids_.end() ? ids->second : std::vector<GameObjectID>{};
+  return ids != game_object_ids_.end() ? ids->second : std::vector<exodus::GameObjectID>{};
 }
 
-void Registry::mark_for_deletion(const GameObjectID game_object_id) { objects_to_delete_.insert(game_object_id); }
+void Registry::mark_for_deletion(const exodus::GameObjectID game_object_id) {
+  objects_to_delete_.insert(game_object_id);
+}
 
 void Registry::update(const double delta_time) {
   // Update all the systems in the registry
   for (const auto& system : systems_ | std::views::values) {
     system->update(delta_time);
+  }
+
+  // Delete all marked game objects
+  for (const auto game_object_id : objects_to_delete_) {
+    delete_game_object(game_object_id);
+  }
+  objects_to_delete_.clear();
+}
+
+void Registry::fixed_update(const double delta_time) {
+  // Update all the fixed-timestep systems in the registry
+  for (const auto& system : systems_ | std::views::values) {
+    system->fixed_update(delta_time);
   }
 
   // Delete all marked game objects

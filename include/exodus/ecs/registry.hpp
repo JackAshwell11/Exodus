@@ -12,15 +12,7 @@
 // Local header
 #include "exodus/ecs/component_base.hpp"
 #include "exodus/ecs/system_base.hpp"
-
-// Represents unique identifiers for game objects
-using GameObjectID = int;
-
-/// Stores the different types of game objects available.
-enum class GameObjectType : std::uint8_t {
-  Player = 0U << 0U,  // 0
-  Enemy = 1U << 0U,   // 1
-};
+#include "exodus/game_object.hpp"
 
 /// Get the type name from a type info object.
 ///
@@ -40,13 +32,14 @@ class RegistryError final : public std::runtime_error {
   /// Initialise the object.
   ///
   /// @param type - The type that caused the registry error.
-  explicit RegistryError(const GameObjectID type) : RegistryError("game object ID `" + std::to_string(type) + "`") {}
+  explicit RegistryError(const exodus::GameObjectID type)
+      : RegistryError("game object ID `" + std::to_string(type) + "`") {}
 
   /// Initialise the object.
   ///
   /// @param type - The type that caused the registry error.
   /// @param game_object_id - The game object ID which caused the registry error.
-  explicit RegistryError(const std::string& type, const GameObjectID game_object_id)
+  explicit RegistryError(const std::string& type, const exodus::GameObjectID game_object_id)
       : std::runtime_error("The component `" + type + "` for the game object ID `" + std::to_string(game_object_id) +
                            "` is not registered with the registry.") {}
 
@@ -65,7 +58,7 @@ class RegistryError final : public std::runtime_error {
   /// @param game_object_id - The game object ID which caused the registry error.
   /// @return The registry error.
   template <typename T>
-  static auto for_type(const GameObjectID game_object_id) -> RegistryError {
+  static auto for_type(const exodus::GameObjectID game_object_id) -> RegistryError {
     return RegistryError(type_name_from_info(typeid(T)), game_object_id);
   }
 };
@@ -80,30 +73,30 @@ class Registry {
   ///
   /// @param game_object_type - The type of game object to create.
   /// @return The game object ID.
-  auto create_game_object(GameObjectType game_object_type) -> GameObjectID;
+  auto create_game_object(exodus::GameObjectType game_object_type) -> exodus::GameObjectID;
 
   /// Check if a game object is registered or not.
   ///
   /// @param game_object_id - The game object ID.
   /// @return Whether the game object is registered or not.
-  [[nodiscard]] auto has_game_object(GameObjectID game_object_id) const -> bool;
+  [[nodiscard]] auto has_game_object(exodus::GameObjectID game_object_id) const -> bool;
 
   /// Mark a game object for deletion after the next update step
   ///
   /// @param game_object_id - The ID of the game object to delete.
   /// @throws RegistryError if the game object does not exist or does not have a kinematic component.
-  void mark_for_deletion(GameObjectID game_object_id);
+  void mark_for_deletion(exodus::GameObjectID game_object_id);
 
   /// Delete a game object.
   ///
   /// @param game_object_id - The game object ID.
   /// @throws RegistryError - If the game object is not registered.
-  void delete_game_object(GameObjectID game_object_id);
+  void delete_game_object(exodus::GameObjectID game_object_id);
 
   /// Clear all game objects except those specified.
   ///
   /// @param game_object_ids_to_preserve - The game object IDs to preserve.
-  void clear_game_objects(const std::unordered_set<GameObjectID>& game_object_ids_to_preserve = {});
+  void clear_game_objects(const std::unordered_set<exodus::GameObjectID>& game_object_ids_to_preserve = {});
 
   /// Add a component to a game object.
   ///
@@ -113,7 +106,7 @@ class Registry {
   /// @param args - The arguments to pass to the component constructor.
   /// @throws RegistryError - If the game object is not registered.
   template <typename Component, typename... Args>
-  void add_component(const GameObjectID game_object_id, Args&&... args) {
+  void add_component(const exodus::GameObjectID game_object_id, Args&&... args) {
     const auto component{std::make_shared<Component>(std::forward<Args>(args)...)};
     components_[type_id<Component>()][game_object_id] = component;
   }
@@ -125,7 +118,7 @@ class Registry {
   /// @throws RegistryError - If the game object is not registered, or if the game object does not have the component.
   /// @return The component from the registry.
   template <typename Component>
-  auto get_component(const GameObjectID game_object_id) const -> std::shared_ptr<Component> {
+  auto get_component(const exodus::GameObjectID game_object_id) const -> std::shared_ptr<Component> {
     const auto component_id{type_id<Component>()};
     if (!components_.contains(component_id)) {
       throw RegistryError::for_type<Component>(game_object_id);
@@ -143,7 +136,7 @@ class Registry {
   /// @param game_object_id - The game object ID.
   /// @return Whether the game object has the component or not.
   template <typename Component>
-  [[nodiscard]] auto has_component(GameObjectID game_object_id) const -> bool {
+  [[nodiscard]] auto has_component(exodus::GameObjectID game_object_id) const -> bool {
     const auto component_id{type_id<Component>()};
     if (!components_.contains(component_id)) {
       return false;
@@ -156,19 +149,20 @@ class Registry {
   /// @param game_object_id - The game object ID.
   /// @throws RegistryError - If the game object is not registered.
   /// @return A range of all components of the game object.
-  [[nodiscard]] auto get_game_object_components(const GameObjectID game_object_id) const {
+  [[nodiscard]] auto get_game_object_components(const exodus::GameObjectID game_object_id) const {
     if (!has_game_object(game_object_id)) {
       throw RegistryError("game object", game_object_id);
     }
-    auto components{components_ |
-                    std::views::transform([game_object_id](auto const& pair) -> std::shared_ptr<ComponentBase> {
-                      auto const& component_map{pair.second};
-                      if (auto component_it{component_map.find(game_object_id)}; component_it != component_map.end()) {
-                        return std::static_pointer_cast<ComponentBase>(component_it->second);
-                      }
-                      return nullptr;
-                    }) |
-                    std::views::filter([](auto const& ptr) { return ptr != nullptr; })};
+    auto components{
+        components_ |
+        std::views::transform([game_object_id](auto const& pair) -> std::shared_ptr<exodus::ecs::ComponentBase> {
+          auto const& component_map{pair.second};
+          if (auto component_it{component_map.find(game_object_id)}; component_it != component_map.end()) {
+            return std::static_pointer_cast<exodus::ecs::ComponentBase>(component_it->second);
+          }
+          return nullptr;
+        }) |
+        std::views::filter([](auto const& ptr) { return ptr != nullptr; })};
     return components;
   }
 
@@ -194,13 +188,14 @@ class Registry {
   /// @param game_object_id - The game object ID.
   /// @throws RegistryError - If the game object is not registered.
   /// @return The type of the game object.
-  [[nodiscard]] auto get_game_object_type(GameObjectID game_object_id) const -> GameObjectType;
+  [[nodiscard]] auto get_game_object_type(exodus::GameObjectID game_object_id) const -> exodus::GameObjectType;
 
   /// Get the game object IDs of a game object type.
   ///
   /// @param game_object_type - The game object type.
   /// @return The game object IDs of the game object type.
-  [[nodiscard]] auto get_game_object_ids(GameObjectType game_object_type) const -> std::vector<GameObjectID>;
+  [[nodiscard]] auto get_game_object_ids(exodus::GameObjectType game_object_type) const
+      -> std::vector<exodus::GameObjectID>;
 
   /// Add a system to the registry.
   ///
@@ -230,6 +225,11 @@ class Registry {
   /// @param delta_time - The time interval since the last time the function was called.
   void update(double delta_time);
 
+  //// Update all the fixed-timestep systems in the registry.
+  ///
+  /// @param delta_time - The time interval since the last time the function was called.
+  void fixed_update(double delta_time);
+
  private:
   /// The next component type ID to use.
   inline static int next_component_type_id_{0};
@@ -243,10 +243,10 @@ class Registry {
   /// @return The type ID.
   template <typename T>
   [[nodiscard]] static auto type_id() -> int {
-    if constexpr (std::is_base_of_v<ComponentBase, T>) {
+    if constexpr (std::is_base_of_v<exodus::ecs::ComponentBase, T>) {
       static auto current_id{next_component_type_id_++};
       return current_id;
-    } else if constexpr (std::is_base_of_v<SystemBase, T>) {
+    } else if constexpr (std::is_base_of_v<exodus::ecs::SystemBase, T>) {
       static auto current_id{next_system_type_id_++};
       return current_id;
     } else {
@@ -256,23 +256,24 @@ class Registry {
   }
 
   /// The next game object ID to use.
-  GameObjectID next_game_object_id_{0};
+  exodus::GameObjectID next_game_object_id_{0};
 
   /// The recycled game object IDs that can be reused.
-  std::queue<GameObjectID> recycled_ids_;
+  std::queue<exodus::GameObjectID> recycled_ids_;
 
   /// The components registered with the registry.
-  std::unordered_map<int, std::unordered_map<GameObjectID, std::shared_ptr<ComponentBase>>> components_;
+  std::unordered_map<int, std::unordered_map<exodus::GameObjectID, std::shared_ptr<exodus::ecs::ComponentBase>>>
+      components_;
 
   /// The game object types registered with the registry.
-  std::unordered_map<GameObjectID, GameObjectType> game_object_types_;
+  std::unordered_map<exodus::GameObjectID, exodus::GameObjectType> game_object_types_;
 
   /// The game object IDs registered with the registry.
-  std::unordered_map<GameObjectType, std::vector<GameObjectID>> game_object_ids_;
+  std::unordered_map<exodus::GameObjectType, std::vector<exodus::GameObjectID>> game_object_ids_;
 
   /// The game object IDs to delete.
-  std::unordered_set<GameObjectID> objects_to_delete_;
+  std::unordered_set<exodus::GameObjectID> objects_to_delete_;
 
   /// The systems registered with the registry.
-  std::unordered_map<int, std::shared_ptr<SystemBase>> systems_;
+  std::unordered_map<int, std::shared_ptr<exodus::ecs::SystemBase>> systems_;
 };
