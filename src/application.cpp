@@ -10,6 +10,7 @@
 
 // Local headers
 #include "exodus/engine.hpp"
+#include "exodus/input.hpp"
 
 namespace {
 /// The fixed delta time for physics and other fixed-step updates (60 FPS).
@@ -119,6 +120,7 @@ int Application::run() {
 
     // Handle SDL events
     process_events();
+    input::update();
 
     // Update and render the engine
     accumulator += deltaTime;
