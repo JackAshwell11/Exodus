@@ -42,6 +42,6 @@ class SystemBase {
 
  protected:
   /// The registry that manages the game objects, components, and systems.
-  Registry* registry_;
+  Registry* registry_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 };
 }  // namespace exodus::ecs
