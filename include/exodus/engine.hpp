@@ -23,6 +23,18 @@ class Engine {
   /// Destroy the engine.
   ~Engine();
 
+  /// Deleted copy constructor to prevent copying.
+  Engine(const Engine&) = delete;
+
+  /// Deleted copy assignment operator to prevent copying.
+  auto operator=(const Engine&) -> Engine& = delete;
+
+  /// Deleted move constructor to prevent moving.
+  Engine(Engine&&) = delete;
+
+  /// Deleted move assignment operator to prevent moving.
+  auto operator=(Engine&&) -> Engine& = delete;
+
   /// Process update logic for the game engine.
   ///
   /// @param delta_time - The time interval since the last time the function was called.

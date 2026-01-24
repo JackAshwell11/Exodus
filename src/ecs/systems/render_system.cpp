@@ -12,10 +12,10 @@
 
 namespace {
 /// The width of the screen.
-constexpr float SCREEN_WIDTH = 1280.0f;
+constexpr float SCREEN_WIDTH = 1280.0F;
 
 /// The height of the screen.
-constexpr float SCREEN_HEIGHT = 720.0f;
+constexpr float SCREEN_HEIGHT = 720.0F;
 
 /// The shader code for drawing the vertices of the sprites.
 constexpr std::string_view VERTEX_SHADER_SOURCE = R"(
@@ -50,32 +50,32 @@ void main() {
 /// The vertex data for a quad made of two triangles.
 constexpr std::array QUAD_VERTICES = {
     // First triangle
-    0.0f, 1.0f, 0.0f, 1.0f,  // Top-left
-    1.0f, 0.0f, 1.0f, 0.0f,  // Bottom-right
-    0.0f, 0.0f, 0.0f, 0.0f,  // Bottom-left
+    0.0F, 1.0F, 0.0F, 1.0F,  // Top-left
+    1.0F, 0.0F, 1.0F, 0.0F,  // Bottom-right
+    0.0F, 0.0F, 0.0F, 0.0F,  // Bottom-left
     // Second triangle
-    0.0f, 1.0f, 0.0f, 1.0f,  // Top-left
-    1.0f, 1.0f, 1.0f, 1.0f,  // Top-right
-    1.0f, 0.0f, 1.0f, 0.0f   // Bottom-right
+    0.0F, 1.0F, 0.0F, 1.0F,  // Top-left
+    1.0F, 1.0F, 1.0F, 1.0F,  // Top-right
+    1.0F, 0.0F, 1.0F, 0.0F   // Bottom-right
 };
 
 /// The orthographic projection matrix for 2D rendering.
-constexpr std::array ORTHO_PROJECTION = {2.0f / SCREEN_WIDTH,
-                                         0.0f,
-                                         0.0f,
-                                         0.0f,
-                                         0.0f,
-                                         -2.0f / SCREEN_HEIGHT,
-                                         0.0f,
-                                         0.0f,
-                                         0.0f,
-                                         0.0f,
-                                         -1.0f,
-                                         0.0f,
-                                         -1.0f,
-                                         1.0f,
-                                         0.0f,
-                                         1.0f};
+constexpr std::array ORTHO_PROJECTION = {2.0F / SCREEN_WIDTH,
+                                         0.0F,
+                                         0.0F,
+                                         0.0F,
+                                         0.0F,
+                                         -2.0F / SCREEN_HEIGHT,
+                                         0.0F,
+                                         0.0F,
+                                         0.0F,
+                                         0.0F,
+                                         -1.0F,
+                                         0.0F,
+                                         -1.0F,
+                                         1.0F,
+                                         0.0F,
+                                         1.0F};
 
 /// Compile an OpenGL shader from source code.
 ///
@@ -144,9 +144,9 @@ void RenderSystem::render() const {
 
     // Compute the model matrix for the sprite
     const std::array model_matrix = {
-        sprite->width, 0.0f, 0.0f, 0.0f, 0.0f, sprite->height,        0.0f,
-        0.0f,          0.0f, 0.0f, 1.0f, 0.0f, transform->position.x, transform->position.y,
-        0.0f,          1.0f};
+        sprite->width, 0.0F, 0.0F, 0.0F, 0.0F, sprite->height,        0.0F,
+        0.0F,          0.0F, 0.0F, 1.0F, 0.0F, transform->position.x, transform->position.y,
+        0.0F,          1.0F};
 
     // Set the model matrix uniform and bind the sprite texture
     glUniformMatrix4fv(model_loc_, 1, GL_FALSE, model_matrix.data());
