@@ -11,6 +11,9 @@
 class Registry;
 
 namespace exodus {
+// Forward declarations
+class AssetManager;
+
 /// Represents the core game engine that manages the game state and updates.
 class Engine {
  public:
@@ -36,6 +39,9 @@ class Engine {
  private:
   /// Manages game objects, components, and systems that are registered.
   std::unique_ptr<Registry> registry_;
+
+  /// Manages loading and caching of assets.
+  std::unique_ptr<AssetManager> asset_manager_;
 
   /// The game object ID of the player.
   GameObjectID player_id_;

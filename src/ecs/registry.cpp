@@ -109,3 +109,10 @@ void Registry::fixed_update(const double delta_time) {
   }
   objects_to_delete_.clear();
 }
+
+void Registry::render() {
+  // Render all the systems in the registry
+  for (const auto& system : systems_ | std::views::values) {
+    system->render();
+  }
+}

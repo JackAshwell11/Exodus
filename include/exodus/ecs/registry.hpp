@@ -230,6 +230,9 @@ class Registry {
   /// @param delta_time - The time interval since the last time the function was called.
   void fixed_update(double delta_time);
 
+  /// Render all the systems in the registry.
+  void render();
+
  private:
   /// The next component type ID to use.
   inline static int next_component_type_id_{0};
