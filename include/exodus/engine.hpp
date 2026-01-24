@@ -5,13 +5,20 @@
 #include <memory>
 
 // Local headers
-#include "exodus/ecs/registry.hpp"
+#include "exodus/game_object.hpp"
 
+// Forward declarations
+class Registry;
+
+namespace exodus {
 /// Represents the core game engine that manages the game state and updates.
 class Engine {
  public:
-  /// Initialise the object.
+  /// Construct the engine.
   explicit Engine();
+
+  /// Destroy the engine.
+  ~Engine();
 
   /// Process update logic for the game engine.
   ///
@@ -29,4 +36,8 @@ class Engine {
  private:
   /// Manages game objects, components, and systems that are registered.
   std::unique_ptr<Registry> registry_;
+
+  /// The game object ID of the player.
+  GameObjectID player_id_;
 };
+}  // namespace exodus

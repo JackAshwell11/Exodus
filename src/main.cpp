@@ -60,7 +60,7 @@ auto main() -> int {
   }
 
   // Run the game loop
-  Engine engine;
+  exodus::Engine engine;
   bool running = true;
   uint64_t lastTime = SDL_GetTicks64();
   double accumulator = 0.0;

@@ -1,5 +1,6 @@
 # Create the static library for the engine
 add_library(exodus_engine STATIC
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
         ${CMAKE_SOURCE_DIR}/src/engine.cpp
 )

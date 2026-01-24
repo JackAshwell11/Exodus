@@ -4,38 +4,41 @@
 // Forward declarations
 class Registry;
 
+namespace exodus::ecs {
 /// The base class for all systems.
 class SystemBase {
  public:
-  /// The copy assignment operator.
-  auto operator=(const SystemBase&) -> SystemBase& = default;
+  /// Construct the system.
+  SystemBase() : registry_(nullptr) {}
 
-  /// The move assignment operator.
-  auto operator=(SystemBase&&) -> SystemBase& = default;
-
-  /// Initialise the object.
+  /// Construct the system with a registry.
   ///
-  /// @param registry - The registry that manages the game objects, components, and systems.
+  /// @param registry The registry that manages the game objects, components, and systems.
   explicit SystemBase(Registry* registry) : registry_(registry) {}
 
-  /// The virtual destructor.
+  /// Destroy the system.
   virtual ~SystemBase() = default;
 
-  /// The copy constructor.
-  SystemBase(const SystemBase&) = default;
+  /// Deleted copy constructor to prevent object slicing.
+  SystemBase(const SystemBase&) = delete;
 
-  /// The move constructor.
-  SystemBase(SystemBase&&) = default;
+  /// Deleted copy assignment to prevent object slicing.
+  auto operator=(const SystemBase&) -> SystemBase& = delete;
 
-  /// Get the registry that manages the game objects, components, and systems.
-  ///
-  /// @return The registry that manages the game objects, components, and systems.
-  [[nodiscard]] auto get_registry() const -> Registry* { return registry_; }
+  /// Deleted move constructor to prevent object slicing.
+  SystemBase(SystemBase&&) = delete;
+
+  /// Deleted move assignment to prevent object slicing.
+  auto operator=(SystemBase&&) -> SystemBase& = delete;
 
   /// Process update logic for a system.
   virtual void update(double /*delta_time*/) const {}
 
- private:
+  /// Process fixed update logic for a system.
+  virtual void fixed_update(double /*delta_time*/) const {}
+
+ protected:
   /// The registry that manages the game objects, components, and systems.
   Registry* registry_;
 };
+}  // namespace exodus::ecs
