@@ -1,6 +1,9 @@
 // Ensure this file is only included once
 #pragma once
 
+// Std headers
+#include <cmath>
+
 namespace exodus {
 /// A 2D vector structure for positions, directions, and sizes.
 ///
@@ -96,6 +99,24 @@ struct Vec2 {
     x /= scalar;
     y /= scalar;
     return *this;
+  }
+
+  /// Calculate the length (magnitude) of the vector.
+  ///
+  /// @return The length of the vector.
+  [[nodiscard]] auto length() const noexcept -> T {
+    return std::hypot(x, y);
+  }
+
+  /// Normalise the vector to have a length of 1.
+  ///
+  /// @return A new vector that is the normalised version of this vector.
+  [[nodiscard]] auto normalise() const noexcept -> Vec2 {
+    const T len = length();
+    if (len == 0) {
+      return {0, 0};
+    }
+    return {x / len, y / len};
   }
 };
 
