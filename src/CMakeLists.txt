@@ -4,6 +4,7 @@ add_library(exodus_engine STATIC
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/render_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
+        ${CMAKE_SOURCE_DIR}/src/generation/noise.cpp
         ${CMAKE_SOURCE_DIR}/src/asset_manager.cpp
         ${CMAKE_SOURCE_DIR}/src/application.cpp
         ${CMAKE_SOURCE_DIR}/src/engine.cpp
@@ -16,6 +17,7 @@ target_compile_definitions(exodus_engine PRIVATE
         EXODUS_ASSETS_DIR="${CMAKE_SOURCE_DIR}/assets"
 )
 target_link_libraries(exodus_engine PUBLIC
+        # TODO: Linking against these is causing problems when running the tests
         SDL2::SDL2
         SDL2_image::SDL2_image
         glad
