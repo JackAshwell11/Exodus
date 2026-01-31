@@ -1,6 +1,7 @@
 # Create the test executable
 add_executable(exodus_tests
         ${CMAKE_SOURCE_DIR}/tests/ecs/test_registry.cpp
+        ${CMAKE_SOURCE_DIR}/tests/generation/test_noise.cpp
 )
 target_include_directories(exodus_tests PRIVATE ${CMAKE_SOURCE_DIR}/tests)
 target_link_libraries(exodus_tests
