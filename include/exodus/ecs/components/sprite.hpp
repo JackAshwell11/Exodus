@@ -10,18 +10,9 @@ struct Sprite final : ComponentBase {
   /// Construct a Sprite component.
   ///
   /// @param texture_id The OpenGL texture ID.
-  /// @param width The width of the sprite.
-  /// @param height The height of the sprite.
-  Sprite(const unsigned int texture_id, const float width, const float height)
-      : texture_id(texture_id), width(width), height(height) {}
+  explicit Sprite(const unsigned int texture_id) : texture_id(texture_id) {}
 
   /// The OpenGL texture ID.
   unsigned int texture_id;
-
-  /// The width of the sprite.
-  float width;
-
-  /// The height of the sprite.
-  float height;
 };
 }  // namespace exodus::ecs::components

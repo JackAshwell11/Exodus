@@ -4,10 +4,12 @@ add_library(exodus_engine STATIC
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/render_system.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
+        ${CMAKE_SOURCE_DIR}/src/generation/generator.cpp
         ${CMAKE_SOURCE_DIR}/src/generation/noise.cpp
         ${CMAKE_SOURCE_DIR}/src/asset_manager.cpp
         ${CMAKE_SOURCE_DIR}/src/application.cpp
         ${CMAKE_SOURCE_DIR}/src/engine.cpp
+        ${CMAKE_SOURCE_DIR}/src/factories.cpp
         ${CMAKE_SOURCE_DIR}/src/input.cpp
 )
 target_include_directories(exodus_engine PUBLIC
@@ -40,4 +42,3 @@ add_executable(exodus
 target_link_libraries(exodus PRIVATE
         exodus_engine
 )
-

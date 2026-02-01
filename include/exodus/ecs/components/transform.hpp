@@ -11,7 +11,7 @@ struct Transform final : ComponentBase {
   /// Construct a Transform component.
   ///
   /// @param position The initial position of the game object.
-  explicit Transform(const Vec2f& position) : ComponentBase(), position(position) {}
+  explicit Transform(const Vec2f& position) : position(position) {}
 
   /// The position of the game object in 2D space.
   Vec2f position;

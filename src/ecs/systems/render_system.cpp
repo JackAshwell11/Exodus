@@ -88,6 +88,15 @@ auto compile_shader(const GLenum type, const char* source) -> GLuint {
   glCompileShader(shader);
   return shader;
 }
+
+/// The base size of a sprite texture.
+constexpr int SPRITE_TEXTURE_SIZE{128};
+
+/// The scale factor to apply to sprites.
+constexpr float SPRITE_SCALE{0.25F};
+
+/// The final size of a sprite in pixels after scaling.
+constexpr float SPRITE_SIZE{SPRITE_TEXTURE_SIZE * SPRITE_SCALE};
 }  // namespace
 
 namespace exodus::ecs::systems {
@@ -144,9 +153,11 @@ void RenderSystem::render() const {
 
     // Compute the model matrix for the sprite
     const std::array model_matrix = {
-        sprite->width, 0.0F, 0.0F, 0.0F, 0.0F, sprite->height,        0.0F,
-        0.0F,          0.0F, 0.0F, 1.0F, 0.0F, transform->position.x, transform->position.y,
-        0.0F,          1.0F};
+        SPRITE_SIZE,                         0.0F,                                0.0F, 0.0F,  // Column 0 (scale X)
+        0.0F,                                SPRITE_SIZE,                         0.0F, 0.0F,  // Column 1 (scale Y)
+        0.0F,                                0.0F,                                1.0F, 0.0F,  // Column 2 (Z)
+        transform->position.x * SPRITE_SIZE, transform->position.y * SPRITE_SIZE, 0.0F, 1.0F   // Column 3 (translation)
+    };
 
     // Set the model matrix uniform and bind the sprite texture
     glUniformMatrix4fv(model_loc_, 1, GL_FALSE, model_matrix.data());
