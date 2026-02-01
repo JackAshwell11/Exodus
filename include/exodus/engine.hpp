@@ -51,11 +51,5 @@ class Engine {
  private:
   /// Manages game objects, components, and systems that are registered.
   std::unique_ptr<Registry> registry_;
-
-  /// Manages loading and caching of assets.
-  std::unique_ptr<AssetManager> asset_manager_;
-
-  /// The game object ID of the player.
-  GameObjectID player_id_;
 };
 }  // namespace exodus

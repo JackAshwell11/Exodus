@@ -2,27 +2,22 @@
 #include "exodus/engine.hpp"
 
 // Local headers
-#include "exodus/asset_manager.hpp"
-#include "exodus/ecs/components/keyboard_controlled.hpp"
-#include "exodus/ecs/components/sprite.hpp"
-#include "exodus/ecs/components/transform.hpp"
-#include "exodus/ecs/components/velocity.hpp"
 #include "exodus/ecs/registry.hpp"
 #include "exodus/ecs/systems/input_system.hpp"
 #include "exodus/ecs/systems/movement_system.hpp"
 #include "exodus/ecs/systems/render_system.hpp"
+#include "exodus/factories.hpp"
+#include "exodus/generation/generator.hpp"
 
 namespace exodus {
-Engine::Engine() : registry_(std::make_unique<Registry>()), asset_manager_(std::make_unique<AssetManager>()) {
+Engine::Engine() : registry_(std::make_unique<Registry>()) {
   registry_->add_system<ecs::systems::InputSystem>();
   registry_->add_system<ecs::systems::MovementSystem>();
   registry_->add_system<ecs::systems::RenderSystem>();
-  player_id_ = registry_->create_game_object(GameObjectType::Player);
-  registry_->add_component<ecs::components::Transform, Vec2f>(player_id_, {0.0F, 0.0F});
-  registry_->add_component<ecs::components::Velocity>(player_id_, 200.0F);
-  registry_->add_component<ecs::components::KeyboardControlled>(player_id_);
-  const auto [id, width, height] = asset_manager_->get(EXODUS_ASSETS_DIR "/sprites/player.png");
-  registry_->add_component<ecs::components::Sprite>(player_id_, id, width, height);
+  const auto chunk{generation::generate_chunk({0, 0}, 0)};
+  for (int i{0}; i < chunk.size(); i++) {
+    create_game_object(registry_.get(), chunk.at(i), {static_cast<float>(i % generation::CHUNK_SIZE), static_cast<float>(i / generation::CHUNK_SIZE)});
+  }
 }
 
 Engine::~Engine() = default;

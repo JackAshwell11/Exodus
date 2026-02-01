@@ -12,5 +12,6 @@ using GameObjectID = int;
 enum class GameObjectType : std::uint8_t {
   Player = 0U << 0U,  // 0
   Enemy = 1U << 0U,   // 1
+  Terrain = 2U << 0U, // 2
 };
 }  // namespace exodus

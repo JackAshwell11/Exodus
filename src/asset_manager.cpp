@@ -15,6 +15,11 @@ constexpr unsigned int IMG_INIT_FLAGS =
 }  // namespace
 
 namespace exodus {
+AssetManager& AssetManager::instance() {
+  static AssetManager instance;
+  return instance;
+}
+
 AssetManager::AssetManager() {
   if ((static_cast<unsigned int>(IMG_Init(IMG_INIT_FLAGS)) & IMG_INIT_FLAGS) != IMG_INIT_FLAGS) {
     throw std::runtime_error("Failed to initialise SDL_image: " + std::string(IMG_GetError()));
@@ -22,22 +27,23 @@ AssetManager::AssetManager() {
 }
 
 AssetManager::~AssetManager() {
-  for (const auto& texture_info : assets_ | std::views::values) {
-    glDeleteTextures(1, &texture_info.id);
+  for (const GLuint& texture_id : assets_ | std::views::values) {
+    glDeleteTextures(1, &texture_id);
   }
   IMG_Quit();
 }
 
-auto AssetManager::get(const std::string& path) -> TextureInfo {
-  // If it's already loaded, return the texture info
-  if (assets_.contains(path)) {
-    return assets_.at(path);
+auto AssetManager::get(const std::string_view path) -> GLuint {
+  // If it's already loaded, return the texture ID
+  const std::string sprite_path{EXODUS_ASSETS_DIR + std::string(path)};
+  if (assets_.contains(sprite_path)) {
+    return assets_.at(sprite_path);
   }
 
   // Load the image
-  SDL_Surface* surface = IMG_Load(path.c_str());
+  SDL_Surface* surface = IMG_Load(sprite_path.c_str());
   if (surface == nullptr) {
-    throw std::runtime_error("Failed to load texture '" + path + "': " + IMG_GetError());
+    throw std::runtime_error("Failed to load texture '" + sprite_path + "': " + IMG_GetError());
   }
 
   // Determine if the image is RGB or RGBA
@@ -55,16 +61,15 @@ auto AssetManager::get(const std::string& path) -> TextureInfo {
   glTexImage2D(GL_TEXTURE_2D, 0, internal_format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
 
   // Set texture parameters and then unbind the texture
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  // Store the texture info and free the surface
-  TextureInfo texture_info{texture_id, static_cast<float>(surface->w), static_cast<float>(surface->h)};
+  // Free the surface and store the texture ID
   SDL_FreeSurface(surface);
-  assets_.emplace(path, texture_info);
-  return texture_info;
+  assets_.emplace(sprite_path, texture_id);
+  return texture_id;
 }
 }  // namespace exodus

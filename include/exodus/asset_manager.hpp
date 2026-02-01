@@ -6,28 +6,14 @@
 #include <unordered_map>
 
 // External headers
-#include "glad/gl.h"
+#include <glad/gl.h>
 
 namespace exodus {
-/// Stores information about an OpenGL texture.
-struct TextureInfo {
-  /// The OpenGL texture ID.
-  GLuint id;
-
-  /// The width of the texture.
-  float width;
-
-  /// The height of the texture.
-  float height;
-};
-
+/// Manages game assets such as textures.
 class AssetManager {
  public:
-  /// Construct the asset manager.
-  explicit AssetManager();
-
-  /// Destroy the asset manager.
-  ~AssetManager();
+  /// Get the instance of the asset manager.
+  static AssetManager& instance();
 
   /// Deleted copy constructor to prevent copying of asset resources.
   AssetManager(const AssetManager&) = delete;
@@ -44,11 +30,17 @@ class AssetManager {
   /// Get or load an asset.
   ///
   /// @param path The path to the PNG/JPG file.
-  /// @return The texture information including the OpenGL texture ID, width, and height.
-  [[nodiscard]] auto get(const std::string& path) -> TextureInfo;
+  /// @return The OpenGL texture ID.
+  [[nodiscard]] auto get(std::string_view path) -> GLuint;
 
  private:
+  /// Construct the asset manager.
+  AssetManager();
+
+  /// Destroy the asset manager.
+  ~AssetManager();
+
   /// The map of loaded assets.
-  std::unordered_map<std::string, TextureInfo> assets_;
+  std::unordered_map<std::string, GLuint> assets_;
 };
 }  // namespace exodus
