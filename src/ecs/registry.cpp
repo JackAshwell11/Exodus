@@ -110,9 +110,9 @@ void Registry::fixed_update(const double delta_time) {
   objects_to_delete_.clear();
 }
 
-void Registry::render() {
+void Registry::render(const exodus::Camera& camera) {
   // Render all the systems in the registry
   for (const auto& system : systems_ | std::views::values) {
-    system->render();
+    system->render(camera);
   }
 }

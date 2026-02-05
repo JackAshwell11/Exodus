@@ -4,7 +4,10 @@
 // Forward declarations
 class Registry;
 
-namespace exodus::ecs {
+namespace exodus {
+class Camera;
+
+namespace ecs {
 /// The base class for all systems.
 class SystemBase {
  public:
@@ -38,10 +41,11 @@ class SystemBase {
   virtual void fixed_update(double /*delta_time*/) const {}
 
   /// Process rendering logic for a system.
-  virtual void render() const {}
+  virtual void render(const Camera& /*camera*/) const {}
 
  protected:
   /// The registry that manages the game objects, components, and systems.
   Registry* registry_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 };
-}  // namespace exodus::ecs
+}  // namespace ecs
+}  // namespace exodus
