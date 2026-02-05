@@ -11,7 +11,8 @@
 namespace exodus::ecs::systems {
 void InputSystem::fixed_update(const double /*delta_time*/) const {
   // Process all entities with KeyboardControlled and Velocity components
-  for (const auto& [id, components] : registry_->get_game_object_components<components::KeyboardControlled, components::Velocity>()) {
+  for (const auto& [id, components] :
+       registry_->get_game_object_components<components::KeyboardControlled, components::Velocity>()) {
     auto& [keyboard, velocity] = components;
 
     // Read keyboard input and calculate direction

@@ -14,6 +14,10 @@
 #include "exodus/ecs/system_base.hpp"
 #include "exodus/game_object.hpp"
 
+namespace exodus {
+class Camera;
+} // namespace exodus
+
 /// Get the type name from a type info object.
 ///
 /// @param info - The type info object.
@@ -231,7 +235,9 @@ class Registry {
   void fixed_update(double delta_time);
 
   /// Render all the systems in the registry.
-  void render();
+  ///
+  /// @param camera - The camera to render with.
+  void render(const exodus::Camera& camera);
 
  private:
   /// The next component type ID to use.

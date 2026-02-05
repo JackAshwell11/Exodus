@@ -17,10 +17,11 @@ constexpr std::size_t CHUNK_TILE_COUNT{CHUNK_SIZE * CHUNK_SIZE};
 
 /// Stores the different types of tiles available in the game world.
 enum class TileType : std::uint8_t {
-  Grass,     // 0
-  Water,     // 1
-  Sand,      // 2
-  Mountain,  // 3
+  Player,    // 0
+  Grass,     // 1
+  Water,     // 2
+  Sand,      // 3
+  Mountain,  // 4
 };
 
 /// Generate a chunk at a given position with a given seed.

@@ -31,7 +31,7 @@ const auto TERRAIN_FACTORY{[](Registry* registry, const GameObjectID game_object
                               const std::string_view sprite_path) -> void {
   const GLuint id = AssetManager::instance().get(sprite_path);
   registry->add_component<ecs::components::Transform>(game_object_id, position);
-  registry->add_component<ecs::components::Sprite>(game_object_id, id);
+  registry->add_component<ecs::components::Sprite>(game_object_id, id, 0);
 }};
 
 /// Add the components for the player game object.
@@ -41,11 +41,14 @@ const auto PLAYER_FACTORY{[](Registry* registry, const GameObjectID game_object_
   registry->add_component<ecs::components::Transform>(game_object_id, position);
   registry->add_component<ecs::components::Velocity>(game_object_id, 200.0F);
   registry->add_component<ecs::components::KeyboardControlled>(game_object_id);
-  registry->add_component<ecs::components::Sprite>(game_object_id, tex);
+  registry->add_component<ecs::components::Sprite>(game_object_id, tex, 1, 2.0F);
 }};
 
 /// The table of game object descriptions for each tile type.
 constexpr auto TILE_TABLE{std::to_array<GameObjectDescription>({
+    /// Player
+    {.game_object_type = GameObjectType::Player, .factory = PLAYER_FACTORY, .sprite_path = "/sprites/player.png"},
+
     /// Grass
     {.game_object_type = GameObjectType::Terrain,
      .factory = TERRAIN_FACTORY,

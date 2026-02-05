@@ -5,7 +5,7 @@
 #include <memory>
 
 // Local headers
-#include "exodus/game_object.hpp"
+#include "exodus/camera.hpp"
 
 // Forward declarations
 class Registry;
@@ -38,7 +38,7 @@ class Engine {
   /// Process update logic for the game engine.
   ///
   /// @param delta_time - The time interval since the last time the function was called.
-  void update(double delta_time) const;
+  void update(double delta_time);
 
   /// Process fixed update logic for the game engine.
   ///
@@ -51,5 +51,8 @@ class Engine {
  private:
   /// Manages game objects, components, and systems that are registered.
   std::unique_ptr<Registry> registry_;
+
+  /// The camera used for rendering the game world.
+  Camera camera_;
 };
 }  // namespace exodus
