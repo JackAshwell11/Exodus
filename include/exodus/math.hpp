@@ -3,6 +3,8 @@
 
 // Std headers
 #include <cmath>
+#include <cstdint>
+#include <functional>
 
 namespace exodus {
 /// A 2D vector structure for positions, directions, and sizes.
@@ -195,3 +197,10 @@ using Vec2i = Vec2<int>;
 using Vec2d = Vec2<double>;
 using Vec2u64 = Vec2<std::uint64_t>;
 }  // namespace exodus
+
+template <typename T>
+struct std::hash<exodus::Vec2<T>> {
+  auto operator()(const exodus::Vec2<T>& vec) const noexcept -> size_t {
+    return hash<T>{}(vec.x) ^ (hash<T>{}(vec.y) << 1);
+  }
+};
