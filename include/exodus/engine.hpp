@@ -3,6 +3,7 @@
 
 // Std headers
 #include <memory>
+#include <unordered_set>
 
 // Local headers
 #include "exodus/camera.hpp"
@@ -54,5 +55,8 @@ class Engine {
 
   /// The camera used for rendering the game world.
   Camera camera_;
+
+  /// The chunks which have already been generated.
+  std::unordered_set<Vec2i> generated_chunks_;
 };
 }  // namespace exodus
