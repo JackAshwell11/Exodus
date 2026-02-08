@@ -1,20 +1,16 @@
 // Related header
-#include "exodus/ecs/systems/input_system.hpp"
+#include "exodus/ecs/systems/input.hpp"
 
 // Local headers
 #include "exodus/ecs/components/keyboard_controlled.hpp"
 #include "exodus/ecs/components/velocity.hpp"
 #include "exodus/ecs/registry.hpp"
 #include "exodus/input.hpp"
-#include "exodus/math.hpp"
 
 namespace exodus::ecs::systems {
-void InputSystem::fixed_update(const double /*delta_time*/) const {
-  // Process all entities with KeyboardControlled and Velocity components
-  for (const auto& [id, components] :
-       registry_->get_game_object_components<components::KeyboardControlled, components::Velocity>()) {
-    auto& [keyboard, velocity] = components;
-
+void input_system(Registry& registry) {
+  for (const auto& [keyboard_controlled, velocity] :
+       registry.view<components::KeyboardControlled, components::Velocity>()) {
     // Read keyboard input and calculate direction
     Vec2f input_direction{0.0F, 0.0F};
     if (input::state().move_up) {
@@ -31,12 +27,12 @@ void InputSystem::fixed_update(const double /*delta_time*/) const {
     }
 
     // Update the velocity with a normalised direction
-    if (const Vec2f normalised_direction = input_direction.normalise(); normalised_direction != Vec2f{0.0f, 0.0f}) {
+    if (const Vec2f normalised_direction = input_direction.normalise(); normalised_direction != Vec2f{0.0F, 0.0F}) {
       // Update velocity based on keyboard input
-      velocity->direction = normalised_direction;
+      velocity.direction = normalised_direction;
     } else {
       // No input - stop moving
-      velocity->direction = {0.0F, 0.0F};
+      velocity.direction = {0.0F, 0.0F};
     }
   }
 }

@@ -2,287 +2,256 @@
 #pragma once
 
 // Std headers
+#include <cassert>
 #include <memory>
-#include <queue>
 #include <ranges>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <vector>
 
-// Local header
-#include "exodus/ecs/component_base.hpp"
-#include "exodus/ecs/system_base.hpp"
-#include "exodus/game_object.hpp"
-
+// NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
 namespace exodus {
-class Camera;
-} // namespace exodus
+/// Represents unique identifiers for game objects
+using GameObjectID = std::uint32_t;
 
-/// Get the type name from a type info object.
-///
-/// @param info - The type info object.
-/// @return The type name as a string.
-auto type_name_from_info(const std::type_info& info) -> std::string;
-
-/// Raised when an error occurs with the registry.
-class RegistryError final : public std::runtime_error {
- public:
-  /// Initialise the object.
-  ///
-  /// @param type - The type that caused the registry error.
-  explicit RegistryError(const std::string& type)
-      : std::runtime_error("The " + type + " is not registered with the registry.") {}
-
-  /// Initialise the object.
-  ///
-  /// @param type - The type that caused the registry error.
-  explicit RegistryError(const exodus::GameObjectID type)
-      : RegistryError("game object ID `" + std::to_string(type) + "`") {}
-
-  /// Initialise the object.
-  ///
-  /// @param type - The type that caused the registry error.
-  /// @param game_object_id - The game object ID which caused the registry error.
-  explicit RegistryError(const std::string& type, const exodus::GameObjectID game_object_id)
-      : std::runtime_error("The component `" + type + "` for the game object ID `" + std::to_string(game_object_id) +
-                           "` is not registered with the registry.") {}
-
-  /// Create a RegistryError given a type.
-  ///
-  /// @tparam T - The type that caused the registry error.
-  /// @return The registry error.
-  template <typename T>
-  static auto for_type() -> RegistryError {
-    return RegistryError("`" + type_name_from_info(typeid(T)) + "`");
-  }
-
-  /// Create a RegistryError given a type and game object ID.
-  ///
-  /// @tparam T - The type that caused the registry error.
-  /// @param game_object_id - The game object ID which caused the registry error.
-  /// @return The registry error.
-  template <typename T>
-  static auto for_type(const exodus::GameObjectID game_object_id) -> RegistryError {
-    return RegistryError(type_name_from_info(typeid(T)), game_object_id);
-  }
-};
-
-/// Manages game objects, components, and systems that are registered.
+namespace ecs {
+/// Manages game objects and their components in the registry.
 class Registry {
  public:
-  /// Initialise the object.
-  explicit Registry() = default;
-
-  /// Create a new game object.
+  /// Create a new game object in the registry.
   ///
-  /// @param game_object_type - The type of game object to create.
-  /// @return The game object ID.
-  auto create_game_object(exodus::GameObjectType game_object_type) -> exodus::GameObjectID;
+  /// @return The ID of the newly created game object.
+  auto create() -> GameObjectID {
+    const GameObjectID game_object_id{next_game_object_id_++};
+    alive_.push_back(true);
+    return game_object_id;
+  }
 
-  /// Check if a game object is registered or not.
+  /// Check if a game object with the given ID exists in the registry.
   ///
-  /// @param game_object_id - The game object ID.
-  /// @return Whether the game object is registered or not.
-  [[nodiscard]] auto has_game_object(exodus::GameObjectID game_object_id) const -> bool;
+  /// @param game_object_id The ID of the game object to check for.
+  /// @return True if the game object exists in the registry, false otherwise.
+  [[nodiscard]] auto has(const GameObjectID game_object_id) const noexcept -> bool {
+    return game_object_id < alive_.size() && alive_[game_object_id];
+  }
 
-  /// Mark a game object for deletion after the next update step
+  /// Destroy the game object with the given ID, removing all its components from the registry.
   ///
-  /// @param game_object_id - The ID of the game object to delete.
-  /// @throws RegistryError if the game object does not exist or does not have a kinematic component.
-  void mark_for_deletion(exodus::GameObjectID game_object_id);
+  /// @param game_object_id The ID of the game object to destroy.
+  void destroy(const GameObjectID game_object_id) {
+    if (!has(game_object_id)) {
+      return;
+    }
+    for (const auto& storage : storages_) {
+      if (storage) {
+        storage->remove(game_object_id);
+      }
+    }
+    alive_[game_object_id] = false;
+  }
 
-  /// Delete a game object.
+  /// Add a component of a certain type to a game object in the registry ignoring if it already exists.
   ///
-  /// @param game_object_id - The game object ID.
-  /// @throws RegistryError - If the game object is not registered.
-  void delete_game_object(exodus::GameObjectID game_object_id);
-
-  /// Clear all game objects except those specified.
-  ///
-  /// @param game_object_ids_to_preserve - The game object IDs to preserve.
-  void clear_game_objects(const std::unordered_set<exodus::GameObjectID>& game_object_ids_to_preserve = {});
-
-  /// Add a component to a game object.
-  ///
-  /// @tparam Component - The type of component to add.
-  /// @tparam Args - The types of arguments to pass to the component constructor.
-  /// @param game_object_id - The game object ID of the game object to add the component to.
-  /// @param args - The arguments to pass to the component constructor.
-  /// @throws RegistryError - If the game object is not registered.
+  /// @tparam Component The type of component to add.
+  /// @tparam Args The types of arguments to pass to the component constructor.
+  /// @param game_object_id The ID of the game object to add the component to.
+  /// @param args The arguments to pass to the component constructor.
   template <typename Component, typename... Args>
-  void add_component(const exodus::GameObjectID game_object_id, Args&&... args) {
-    const auto component{std::make_shared<Component>(std::forward<Args>(args)...)};
-    components_[type_id<Component>()][game_object_id] = component;
+  void add_component(const GameObjectID game_object_id, Args&&... args) {
+    // Make sure the storage has enough size for this game object
+    assert(has(game_object_id));
+    auto& storage{get_storage<Component>()};
+    if (game_object_id >= storage.sparse.size()) {
+      storage.sparse.resize(game_object_id + 1, INVALID_COMPONENT_INDEX);
+    }
+
+    // Stop if we already have this component
+    if (storage.sparse[game_object_id] != INVALID_COMPONENT_INDEX) {
+      return;
+    }
+
+    // Add the component to the end of the storage
+    storage.components.emplace_back(std::forward<Args>(args)...);
+    storage.game_objects.emplace_back(game_object_id);
+    storage.sparse[game_object_id] = storage.components.size() - 1;
   }
 
-  /// Get a component from the registry.
+  /// Get a component from the registry for a given game object ID.
   ///
-  /// @tparam Component - The type of component to get.
-  /// @param game_object_id - The game object ID.
-  /// @throws RegistryError - If the game object is not registered, or if the game object does not have the component.
-  /// @return The component from the registry.
+  /// @tparam Component The type of component to get.
+  /// @param game_object_id The ID of the game object to get the component for.
+  /// @return A reference to the component of the given type for the specified game object ID.
   template <typename Component>
-  auto get_component(const exodus::GameObjectID game_object_id) const -> std::shared_ptr<Component> {
-    const auto component_id{type_id<Component>()};
-    if (!components_.contains(component_id)) {
-      throw RegistryError::for_type<Component>(game_object_id);
-    }
-    const auto& component_map{components_.at(component_id)};
-    if (!component_map.contains(game_object_id)) {
-      throw RegistryError::for_type<Component>(game_object_id);
-    }
-    return std::static_pointer_cast<Component>(component_map.at(game_object_id));
+  auto get_component(const GameObjectID game_object_id) -> Component& {
+    assert(has(game_object_id));
+    auto& storage{get_storage<Component>()};
+    assert(game_object_id < storage.sparse.size());
+    const auto index{storage.sparse[game_object_id]};
+    assert(index != INVALID_COMPONENT_INDEX);
+    return storage.components[index];
   }
 
-  /// Checks if a game object has a given component or not.
+  /// Check if a game object has a component of a certain type.
   ///
-  /// @tparam Component - The type of component to check for.
-  /// @param game_object_id - The game object ID.
-  /// @return Whether the game object has the component or not.
+  /// @tparam Component The type of component to check for.
+  /// @param game_object_id The ID of the game object to check for the component.
+  /// @return True if the game object has a component of the specified type, false otherwise
   template <typename Component>
-  [[nodiscard]] auto has_component(exodus::GameObjectID game_object_id) const -> bool {
-    const auto component_id{type_id<Component>()};
-    if (!components_.contains(component_id)) {
+  [[nodiscard]] auto has_component(const GameObjectID game_object_id) const -> bool {
+    // Check if the game object exists and if the component storage exists
+    if (!has(game_object_id)) {
       return false;
     }
-    return components_.at(component_id).contains(game_object_id);
-  }
-
-  /// Get all components of a game object.
-  ///
-  /// @param game_object_id - The game object ID.
-  /// @throws RegistryError - If the game object is not registered.
-  /// @return A range of all components of the game object.
-  [[nodiscard]] auto get_game_object_components(const exodus::GameObjectID game_object_id) const {
-    if (!has_game_object(game_object_id)) {
-      throw RegistryError("game object", game_object_id);
+    const int type_id{component_type_id<Component>()};
+    if (type_id >= storages_.size() || !storages_[type_id]) {
+      return false;
     }
-    auto components{
-        components_ |
-        std::views::transform([game_object_id](auto const& pair) -> std::shared_ptr<exodus::ecs::ComponentBase> {
-          auto const& component_map{pair.second};
-          if (auto component_it{component_map.find(game_object_id)}; component_it != component_map.end()) {
-            return std::static_pointer_cast<exodus::ecs::ComponentBase>(component_it->second);
-          }
-          return nullptr;
-        }) |
-        std::views::filter([](auto const& ptr) { return ptr != nullptr; })};
-    return components;
+
+    // Check if the game object has the component in the storage
+    const auto* storage{static_cast<Storage<Component>*>(storages_[type_id].get())};
+    return game_object_id < storage->sparse.size() && storage->sparse[game_object_id] != INVALID_COMPONENT_INDEX;
   }
 
-  /// Get all game objects that have the required components.
+  /// Create a view for iterating over game objects that have a specific set of components.
   ///
-  /// @tparam Component - The types of components to find.
-  /// @return The game objects that have the required components.
+  /// @tparam Component The types of components to include in the view.
+  /// @return A view that allows iterating over game objects that have the specified components.
   template <typename... Component>
-  auto get_game_object_components() const {
-    auto filtered{game_object_types_ | std::views::filter([this](auto const& pair) -> auto {
-                    return (this->has_component<Component>(pair.first) && ...);
-                  })};
-    auto transformed{filtered | std::views::transform([this](auto const& pair) -> auto {
-                       return std::make_pair(pair.first, std::tuple<std::shared_ptr<Component>...>{
-                                                             this->get_component<Component>(pair.first)...});
-                     })};
+  auto view() {
+    // Get all the storages for the given components
+    static_assert(sizeof...(Component) > 0, "Cannot create a view with no components");
+    auto storages{std::tie(get_storage<Component>()...)};
 
-    return transformed;
+    // Get the primary storage which will act as the first component to iterate over. This should be the component with
+    // the least number of instances to minimise the number of iterations needed
+    auto& primary{std::get<0>(storages)};
+
+    // Create a lazy generator using a range
+    auto rng{std::views::iota(std::size_t{0}, primary.components.size()) |
+             std::views::filter([&](const std::size_t val) -> auto {
+               return (has_component<Component>(primary.game_objects[val]) && ...);
+             }) |
+             std::views::transform([&](std::size_t val) -> std::tuple<Component&...> {
+               return std::tuple<Component&...>{get_component<Component>(primary.game_objects[val])...};
+             })};
+    return rng;
   }
-
-  /// Get the type of a game object.
-  ///
-  /// @param game_object_id - The game object ID.
-  /// @throws RegistryError - If the game object is not registered.
-  /// @return The type of the game object.
-  [[nodiscard]] auto get_game_object_type(exodus::GameObjectID game_object_id) const -> exodus::GameObjectType;
-
-  /// Get the game object IDs of a game object type.
-  ///
-  /// @param game_object_type - The game object type.
-  /// @return The game object IDs of the game object type.
-  [[nodiscard]] auto get_game_object_ids(exodus::GameObjectType game_object_type) const
-      -> std::vector<exodus::GameObjectID>;
-
-  /// Add a system to the registry.
-  ///
-  /// @tparam System - The type of system to add.
-  /// @throws RegistryError - If the system is already registered.
-  template <typename System>
-  void add_system() {
-    systems_[type_id<System>()] = std::make_shared<System>(this);
-  }
-
-  /// Get a system from the registry.
-  ///
-  /// @tparam System - The type of system to get.
-  /// @throws RegistryError - If the system is not registered.
-  /// @return The system from the registry.
-  template <typename System>
-  auto get_system() const -> std::shared_ptr<System> {
-    const auto system_id{type_id<System>()};
-    if (!systems_.contains(system_id)) {
-      throw RegistryError::for_type<System>();
-    }
-    return std::static_pointer_cast<System>(systems_.at(system_id));
-  }
-
-  /// Update all the systems in the registry.
-  ///
-  /// @param delta_time - The time interval since the last time the function was called.
-  void update(double delta_time);
-
-  //// Update all the fixed-timestep systems in the registry.
-  ///
-  /// @param delta_time - The time interval since the last time the function was called.
-  void fixed_update(double delta_time);
-
-  /// Render all the systems in the registry.
-  ///
-  /// @param camera - The camera to render with.
-  void render(const exodus::Camera& camera);
 
  private:
+  /// A constant representing an invalid component index in the sparse array.
+  inline static std::size_t INVALID_COMPONENT_INDEX{static_cast<std::size_t>(-1)};
+
+  /// An interface for component storage, allowing for type-erased storage of different component types.
+  struct IStorage {
+    /// Create the storage.
+    IStorage() = default;
+
+    /// Destroy the storage.
+    virtual ~IStorage() = default;
+
+    /// Deleted copy constructor to prevent object slicing.
+    IStorage(const IStorage&) = delete;
+
+    /// Deleted copy assignment to prevent object slicing.
+    auto operator=(const IStorage&) -> IStorage& = delete;
+
+    /// Deleted move constructor to prevent object slicing.
+    IStorage(IStorage&&) = delete;
+
+    /// Deleted move assignment to prevent object slicing.
+    auto operator=(IStorage&&) -> IStorage& = delete;
+
+    /// Remove the component associated with the given game object ID from the storage.
+    virtual void remove(GameObjectID game_object_id) = 0;
+  };
+
+  /// A dense bidirectional storage for components of a specific type, implemented as a sparse set.
+  ///
+  /// Storage model:
+  /// - Each component type has its own `Storage`, indexed by a compile-time assigned type ID.
+  /// - Components are stored densely in `components` where `game_objects[i]` is the owner of `components[i]`.
+  /// - `sparse[g]` maps a game object ID `g` to its component’s dense index, or `INVALID_COMPONENT_INDEX` if the
+  ///   component is absent.
+  ///
+  /// Behaviour:
+  /// - Adding a component appends it to the dense arrays and records its index in `sparse`.
+  /// - Removing a component fills the gap by moving the last dense element into the removed slot and updating the
+  ///   affected sparse entry.
+  template <typename Component>
+  struct Storage : IStorage {
+    /// Stores dense component data, indexed by dense indices.
+    std::vector<Component> components;
+
+    /// A dense mapping from dense index to owning game object IDs.
+    std::vector<GameObjectID> game_objects;
+
+    /// A sparse mapping from game object ID to dense indices.
+    std::vector<size_t> sparse;
+
+    /// Remove the component associated with the given game object ID from the storage.
+    void remove(const GameObjectID game_object_id) override {
+      // Check if the game object ID is valid and has a component in the storage
+      if (game_object_id >= sparse.size()) {
+        return;
+      }
+      const size_t index{sparse[game_object_id]};
+      if (index == INVALID_COMPONENT_INDEX) {
+        return;
+      }
+
+      // Move the component to the end if it is not the last one in the storage to maintain the sparse set structure
+      if (const size_t last{components.size() - 1}; index != last) {
+        components[index] = std::move(components[last]);
+        game_objects[index] = game_objects[last];
+        sparse[game_objects[index]] = index;
+      }
+
+      // Remove the last element from the storage
+      components.pop_back();
+      game_objects.pop_back();
+      sparse[game_object_id] = INVALID_COMPONENT_INDEX;
+    }
+  };
+
+  /// The next game object ID to use.
+  GameObjectID next_game_object_id_{0};
+
   /// The next component type ID to use.
   inline static int next_component_type_id_{0};
 
-  /// The next system type ID to use.
-  inline static int next_system_type_id_{0};
-
-  /// Get the next type ID to use.
+  /// Get the component type ID for a given component type.
   ///
-  /// @tparam T - The type to get the type ID for.
-  /// @return The type ID.
-  template <typename T>
-  [[nodiscard]] static auto type_id() -> int {
-    if constexpr (std::is_base_of_v<exodus::ecs::ComponentBase, T>) {
-      static auto current_id{next_component_type_id_++};
-      return current_id;
-    } else if constexpr (std::is_base_of_v<exodus::ecs::SystemBase, T>) {
-      static auto current_id{next_system_type_id_++};
-      return current_id;
-    } else {
-      static_assert(sizeof(T) == 0, "type_id called on unknown type");
-      return -1;
-    }
+  /// @return The component type ID for the given component type.
+  template <typename Component>
+  static auto component_type_id() -> int {
+    (void)typeid(Component);  // Ignore unused template warning
+    static int const component_type_id{next_component_type_id_++};
+    return component_type_id;
   }
 
-  /// The next game object ID to use.
-  exodus::GameObjectID next_game_object_id_{0};
+  /// A vector of storages for each component type, indexed by component type ID.
+  std::vector<std::unique_ptr<IStorage>> storages_;
 
-  /// The recycled game object IDs that can be reused.
-  std::queue<exodus::GameObjectID> recycled_ids_;
+  /// Get the storage for a given component type, creating it if it does not exist.
+  ///
+  /// @tparam Component The type of component to get the storage for.
+  /// @return The storage for the given component type.
+  template <typename Component>
+  auto get_storage() -> Storage<Component>& {
+    // Resize storages vector if needed
+    const int type_id{component_type_id<Component>()};
+    if (type_id >= storages_.size()) {
+      storages_.resize(type_id + 1);
+    }
 
-  /// The components registered with the registry.
-  std::unordered_map<int, std::unordered_map<exodus::GameObjectID, std::shared_ptr<exodus::ecs::ComponentBase>>>
-      components_;
+    // Lazily create storage for this component type
+    if (!storages_[type_id]) {
+      storages_[type_id] = std::make_unique<Storage<Component>>();
+    }
+    return *static_cast<Storage<Component>*>(storages_[type_id].get());
+  }
 
-  /// The game object types registered with the registry.
-  std::unordered_map<exodus::GameObjectID, exodus::GameObjectType> game_object_types_;
-
-  /// The game object IDs registered with the registry.
-  std::unordered_map<exodus::GameObjectType, std::vector<exodus::GameObjectID>> game_object_ids_;
-
-  /// The game object IDs to delete.
-  std::unordered_set<exodus::GameObjectID> objects_to_delete_;
-
-  /// The systems registered with the registry.
-  std::unordered_map<int, std::shared_ptr<exodus::ecs::SystemBase>> systems_;
+  /// A vector of booleans indicating whether each game object ID is alive or not, indexed by game object ID.
+  std::vector<bool> alive_;
 };
+}  // namespace ecs
+}  // namespace exodus
+// NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
