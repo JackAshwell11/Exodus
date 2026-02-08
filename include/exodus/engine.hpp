@@ -9,8 +9,6 @@
 #include "exodus/camera.hpp"
 
 namespace exodus {
-class AssetManager;
-
 namespace ecs {
 class Registry;
 }  // namespace ecs

@@ -20,6 +20,7 @@ project(exodus LANGUAGES C CXX)
 include(CTest)
 
 # Find the required packages
+find_package(OpenGL REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_image CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)

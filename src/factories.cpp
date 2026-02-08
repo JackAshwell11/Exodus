@@ -2,40 +2,35 @@
 #include "exodus/factories.hpp"
 
 // Local headers
-#include "exodus/asset_manager.hpp"
 #include "exodus/ecs/components/keyboard_controlled.hpp"
 #include "exodus/ecs/components/player.hpp"
 #include "exodus/ecs/components/sprite.hpp"
 #include "exodus/ecs/components/transform.hpp"
 #include "exodus/ecs/components/velocity.hpp"
 #include "exodus/ecs/registry.hpp"
+#include "exodus/generation/generator.hpp"
 
 namespace exodus {
 namespace {
+/// A sentinel value representing an uninitialised OpenGL texture ID (texture IDs start at 1).
+constexpr GLuint INVALID_TEXTURE_ID{0};
+
+/// The mapping of tile types to texture IDs.
+std::unordered_map<generation::TileType, GLuint> tile_textures{};
+
 /// The type of factory function to create a game object.
-using FactoryFn = void (*)(ecs::Registry&, GameObjectID, const Vec2f&, std::string_view);
-
-/// Describes how to construct a game object.
-struct GameObjectDescription {
-  /// The factory function to create the game object.
-  FactoryFn factory;
-
-  /// The path to the sprite asset.
-  std::string_view sprite_path;
-};
+using FactoryFn = void (*)(ecs::Registry&, GameObjectID, const Vec2f&, GLuint);
 
 /// Add the components for the terrain game object.
-const auto TERRAIN_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id, const Vec2f& position,
-                              const std::string_view sprite_path) -> void {
-  const GLuint texture_id{AssetManager::instance().get(sprite_path)};
+constexpr FactoryFn TERRAIN_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id,
+                                       const Vec2f& position, const GLuint texture_id) -> void {
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 0);
   registry.add_component<ecs::components::Transform>(game_object_id, position);
 }};
 
 /// Add the components for the player game object.
-const auto PLAYER_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id, const Vec2f& position,
-                             const std::string_view sprite_path) -> void {
-  const GLuint texture_id{AssetManager::instance().get(sprite_path)};
+constexpr FactoryFn PLAYER_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id, const Vec2f& position,
+                                      const GLuint texture_id) -> void {
   registry.add_component<ecs::components::KeyboardControlled>(game_object_id);
   registry.add_component<ecs::components::Player>(game_object_id);
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 1, 2.0F);
@@ -44,23 +39,25 @@ const auto PLAYER_FACTORY{[](ecs::Registry& registry, const GameObjectID game_ob
 }};
 
 /// The table of game object descriptions for each tile type.
-constexpr auto TILE_TABLE{std::to_array<GameObjectDescription>({
+constexpr auto TILE_TABLE{std::to_array<FactoryFn>({
     /// Player
-    {.factory{PLAYER_FACTORY}, .sprite_path{"/sprites/player.png"}},
+    PLAYER_FACTORY,
 
     /// Grass
-    {.factory{TERRAIN_FACTORY}, .sprite_path{"/sprites/floor_grass.png"}},
+    TERRAIN_FACTORY,
 
     /// Water
-    {.factory{TERRAIN_FACTORY}, .sprite_path{"/sprites/floor_water.png"}},
+    TERRAIN_FACTORY,
 
     /// Sand
-    {.factory{TERRAIN_FACTORY}, .sprite_path{"/sprites/floor_sand.png"}},
+    TERRAIN_FACTORY,
 
     /// Mountain
-    {.factory{TERRAIN_FACTORY}, .sprite_path{"/sprites/floor_mountain.png"}},
+    TERRAIN_FACTORY,
 })};
 }  // namespace
+
+auto get_tile_textures() -> std::unordered_map<generation::TileType, GLuint>& { return tile_textures; }
 
 void create_game_object(ecs::Registry& registry, const generation::TileType& tile_type, const Vec2f& position) {
   // Check if the tile type exists
@@ -70,8 +67,10 @@ void create_game_object(ecs::Registry& registry, const generation::TileType& til
   }
 
   // Create the game object
-  const auto& [factory, sprite_path]{TILE_TABLE.at(index)};
+  const auto& factory{TILE_TABLE.at(index)};
   const GameObjectID game_object_id{registry.create()};
-  factory(registry, game_object_id, position, sprite_path);
+  const GLuint texture_id{
+      get_tile_textures().try_emplace(tile_type, static_cast<GLuint>(INVALID_TEXTURE_ID)).first->second};
+  factory(registry, game_object_id, position, texture_id);
 }
 }  // namespace exodus
