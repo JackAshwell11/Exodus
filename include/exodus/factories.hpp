@@ -1,6 +1,9 @@
 // Ensure this file is only included once
 #pragma once
 
+// External headers
+#include <glad/gl.h>
+
 // Local headers
 #include "exodus/math.hpp"
 
@@ -12,6 +15,11 @@ class Registry;
 namespace generation {
 enum class TileType : std::uint8_t;
 }  // namespace generation
+
+/// Get the mapping of tile types to OpenGL texture IDs for the game objects.
+///
+/// @return A reference to the mapping of tile types to OpenGL texture IDs for the game objects.
+auto get_tile_textures() -> std::unordered_map<generation::TileType, GLuint>&;
 
 /// Create a game object if possible.
 ///
