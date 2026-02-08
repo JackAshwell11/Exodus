@@ -44,3 +44,7 @@ env.bak/
 env/
 venv.bak/
 venv/
+
+# Build directories
+build/
+dist/
