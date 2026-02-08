@@ -2,12 +2,11 @@
 #pragma once
 
 // Local headers
-#include "exodus/ecs/component_base.hpp"
 #include "exodus/math.hpp"
 
 namespace exodus::ecs::components {
 /// Allows a game object to have a position in 2D space.
-struct Transform final : ComponentBase {
+struct Transform final {
   /// Construct a Transform component.
   ///
   /// @param position The initial position of the game object.

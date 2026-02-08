@@ -14,12 +14,12 @@
 
 namespace {
 /// The fixed delta time for physics and other fixed-step updates (60 FPS).
-constexpr double FIXED_TIMESTEP = 1.0 / 60.0;
+constexpr float FIXED_TIMESTEP = 1.0F / 60.0F;
 }  // namespace
 
 namespace exodus {
-Application::Application(const std::string& title, const int width, const int height)
-    : title_(title),
+Application::Application(std::string title, const int width, const int height)
+    : title_(std::move(title)),
       width_(width),
       height_(height),
       window_(nullptr),
@@ -40,7 +40,7 @@ Application::~Application() {
   SDL_Quit();
 }
 
-bool Application::initialise() {
+auto Application::initialise() -> bool {
   // Initialise SDL
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     std::cerr << "Failed to initialise SDL: " << SDL_GetError() << "\n";
@@ -100,7 +100,7 @@ void Application::process_events() {
   }
 }
 
-int Application::run() {
+auto Application::run() -> int {
   // Initialise the application if not already initialised
   if (!initialise()) {
     return 1;
@@ -108,28 +108,28 @@ int Application::run() {
 
   // Start the main loop
   running_ = true;
-  uint64_t lastTime = SDL_GetTicks64();
-  double accumulator = 0.0;
+  uint64_t last_time = SDL_GetTicks64();
+  float accumulator = 0.0F;
 
   // Loop until the application is no longer running
   while (running_) {
     // Calculate the delta time since the last frame
-    const uint64_t currentTime = SDL_GetTicks64();
-    const double deltaTime = static_cast<double>(currentTime - lastTime) * 0.001;
-    lastTime = currentTime;
+    const uint64_t current_time = SDL_GetTicks64();
+    const float delta_time = static_cast<float>(current_time - last_time) * 0.001F;
+    last_time = current_time;
 
     // Handle SDL events
     process_events();
     input::update();
 
     // Update and render the engine
-    accumulator += deltaTime;
+    accumulator += delta_time;
     while (accumulator >= FIXED_TIMESTEP) {
       engine_->fixed_update(FIXED_TIMESTEP);
       accumulator -= FIXED_TIMESTEP;
     }
-    engine_->update(deltaTime);
-    engine_->render();
+    engine_->update(delta_time);
+    engine_->render(delta_time);
     SDL_GL_SwapWindow(window_);
   }
   return 0;

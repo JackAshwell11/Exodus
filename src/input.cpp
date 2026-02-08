@@ -15,7 +15,7 @@ namespace {
 /// @return True if the key is held down, false otherwise.
 [[nodiscard]] auto is_key_down(const std::span<const Uint8> keys, const SDL_Scancode scancode) -> bool {
   const auto idx = static_cast<size_t>(scancode);
-  //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
   return idx < keys.size() && keys[idx] != 0;
 }
 }  // namespace
@@ -37,13 +37,11 @@ void update() {
 
   // Determine what keys are pressed
   const std::span keys{raw, static_cast<size_t>(key_count)};
-  current.move_up    = is_key_down(keys, SDL_SCANCODE_W);
-  current.move_down  = is_key_down(keys, SDL_SCANCODE_S);
-  current.move_left  = is_key_down(keys, SDL_SCANCODE_A);
+  current.move_up = is_key_down(keys, SDL_SCANCODE_W);
+  current.move_down = is_key_down(keys, SDL_SCANCODE_S);
+  current.move_left = is_key_down(keys, SDL_SCANCODE_A);
   current.move_right = is_key_down(keys, SDL_SCANCODE_D);
 }
 
-auto state() -> const InputState& {
-  return current;
-}
+auto state() -> const InputState& { return current; }
 }  // namespace exodus::input

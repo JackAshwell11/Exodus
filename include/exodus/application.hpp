@@ -20,7 +20,7 @@ class Application {
   /// @param title - The window title.
   /// @param width - The window width.
   /// @param height - The window height.
-  explicit Application(const std::string& title, int width, int height);
+  explicit Application(std::string title, int width, int height);
 
   /// Destroy the application.
   ~Application();
@@ -29,7 +29,13 @@ class Application {
   Application(const Application&) = delete;
 
   /// Deleted copy assignment operator to prevent copying.
-  Application& operator=(const Application&) = delete;
+  auto operator=(const Application&) -> Application& = delete;
+
+  /// Deleted move constructor to prevent moving.
+  Application(Application&&) = delete;
+
+  /// Deleted move assignment operator to prevent moving.
+  auto operator=(Application&&) -> Application& = delete;
 
   /// Run the application main loop.
   ///

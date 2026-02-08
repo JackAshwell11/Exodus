@@ -1,9 +1,10 @@
 # Create the static library for the engine
 add_library(exodus_engine STATIC
-        ${CMAKE_SOURCE_DIR}/src/ecs/systems/input_system.cpp
-        ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement_system.cpp
-        ${CMAKE_SOURCE_DIR}/src/ecs/systems/render_system.cpp
-        ${CMAKE_SOURCE_DIR}/src/ecs/registry.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/camera_follow.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/chunk_generation.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/input.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/sprite_render.cpp
         ${CMAKE_SOURCE_DIR}/src/generation/generator.cpp
         ${CMAKE_SOURCE_DIR}/src/generation/noise.cpp
         ${CMAKE_SOURCE_DIR}/src/asset_manager.cpp

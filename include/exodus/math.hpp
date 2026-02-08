@@ -121,8 +121,10 @@ struct Vec2 {
   /// @tparam U The numeric type of the other vector.
   /// @param other The vector to multiply with this vector.
   /// @return A new vector representing the component-wise product.
-  template<typename U>
-  constexpr auto operator*(const Vec2<U>& other) const noexcept -> Vec2 { return {x * static_cast<T>(other.x), y * static_cast<T>(other.y)}; }
+  template <typename U>
+  constexpr auto operator*(const Vec2<U>& other) const noexcept -> Vec2 {
+    return {x * static_cast<T>(other.x), y * static_cast<T>(other.y)};
+  }
 
   /// Multiplies this vector by a scalar value in-place.
   ///
@@ -145,8 +147,10 @@ struct Vec2 {
   /// @tparam U The numeric type of the other vector.
   /// @param other The vector to divide this vector by.
   /// @return A new vector representing the component-wise division.
-  template<typename U>
-  constexpr auto operator/(const Vec2<U>& other) const noexcept -> Vec2 { return {x / static_cast<T>(other.x), y / static_cast<T>(other.y)}; }
+  template <typename U>
+  constexpr auto operator/(const Vec2<U>& other) const noexcept -> Vec2 {
+    return {x / static_cast<T>(other.x), y / static_cast<T>(other.y)};
+  }
 
   /// Divides this vector by a scalar value in-place.
   ///
