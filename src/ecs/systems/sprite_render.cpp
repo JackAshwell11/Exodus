@@ -2,38 +2,68 @@
 #include "exodus/ecs/systems/sprite_render.hpp"
 
 // Std headers
+#include <algorithm>
 #include <array>
 #include <string_view>
+#include <unordered_map>
+#include <vector>
 
 // External headers
 #include <glad/gl.h>
 
 // Local headers
+#include <iostream>
+
 #include "exodus/camera.hpp"
 #include "exodus/ecs/components/sprite.hpp"
 #include "exodus/ecs/components/transform.hpp"
 #include "exodus/ecs/registry.hpp"
 
 namespace {
+/// The base size of a sprite texture.
+constexpr int SPRITE_TEXTURE_SIZE{128};
+
 /// The width of the screen.
 constexpr float SCREEN_WIDTH{1280.0F};
 
 /// The height of the screen.
 constexpr float SCREEN_HEIGHT{720.0F};
 
+/// The near-clipping plane for depth testing.
+constexpr float NEAR_PLANE{-10.0F};
+
+/// The far-clipping plane for depth testing.
+constexpr float FAR_PLANE{10.0F};
+
+/// The scale factor to apply to sprites.
+constexpr float SPRITE_SCALE{0.25F};
+
+/// The final size of a sprite in pixels after scaling.
+constexpr float SPRITE_SIZE{SPRITE_TEXTURE_SIZE * SPRITE_SCALE};
+
+/// The stride of quad vertex data (position + texture coordinates).
+constexpr size_t QUAD_VERTEX_STRIDE{4 * sizeof(float)};
+
+/// The stride of instance data (offset + scale + depth).
+constexpr size_t INSTANCE_STRIDE{4 * sizeof(float)};
+
 /// The shader code for drawing the vertices of the sprites.
 constexpr std::string_view VERTEX_SHADER_SOURCE{R"(
 #version 330 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec2 aInstanceOffset;
+layout (location = 3) in float aInstanceScale;
+layout (location = 4) in float aInstanceDepth;
+
+uniform mat4 uProjection;
+uniform vec2 uCameraOffset;
 
 out vec2 TexCoord;
 
-uniform mat4 uModel;
-uniform mat4 uProjection;
-
 void main() {
-  gl_Position = uProjection * uModel * vec4(aPos, 0.0, 1.0);
+  vec2 worldPos = aPos * aInstanceScale + aInstanceOffset + uCameraOffset;
+  gl_Position = uProjection * vec4(worldPos, aInstanceDepth, 1.0);
   TexCoord = aTexCoord;
 }
 )"};
@@ -69,21 +99,6 @@ constexpr std::array QUAD_VERTICES{
     1.0F, 1.0F, 1.0F, 1.0F,  // Top-right
     1.0F, 0.0F, 1.0F, 0.0F   // Bottom-right
 };
-
-/// The near-clipping plane for depth testing.
-constexpr float NEAR_PLANE{-10.0F};
-
-/// The far-clipping plane for depth testing.
-constexpr float FAR_PLANE{10.0F};
-
-/// The base size of a sprite texture.
-constexpr int SPRITE_TEXTURE_SIZE{128};
-
-/// The scale factor to apply to sprites.
-constexpr float SPRITE_SCALE{0.25F};
-
-/// The final size of a sprite in pixels after scaling.
-constexpr float SPRITE_SIZE{SPRITE_TEXTURE_SIZE * SPRITE_SCALE};
 
 /// Compile an OpenGL shader from source code.
 ///
@@ -121,19 +136,22 @@ class RenderContext {
   auto operator=(RenderContext&&) -> RenderContext& = delete;
 
   /// The OpenGL shader program used for rendering sprites.
-  GLuint shader_program_{0};
+  GLuint shader_program{0};
 
   /// The OpenGL Vertex Array Object.
-  GLuint vao_{0};
+  GLuint vao{0};
 
-  /// The OpenGL Vertex Buffer Object.
-  GLuint vbo_{0};
+  /// The OpenGL Vertex Buffer Object for quad vertices.
+  GLuint quad_vbo{0};
 
-  /// The cached uniform location for the model matrix.
-  GLint model_loc_{-1};
+  /// The OpenGL Vertex Buffer Object for instance data.
+  GLuint instance_vbo{0};
 
   /// The cached uniform location for the projection matrix.
-  GLint projection_loc_{-1};
+  GLint projection_loc{-1};
+
+  /// The cached uniform location for the camera offset.
+  GLint camera_offset_loc{-1};
 
  private:
   /// Construct the render context.
@@ -143,33 +161,56 @@ class RenderContext {
     const GLuint fragment_shader{compile_shader(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE.data())};
 
     // Link the shaders into a shader program
-    shader_program_ = glCreateProgram();
-    glAttachShader(shader_program_, vertex_shader);
-    glAttachShader(shader_program_, fragment_shader);
-    glLinkProgram(shader_program_);
+    shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
     // Cache uniform locations for performance
-    model_loc_ = glGetUniformLocation(shader_program_, "uModel");
-    projection_loc_ = glGetUniformLocation(shader_program_, "uProjection");
+    projection_loc = glGetUniformLocation(shader_program, "uProjection");
+    camera_offset_loc = glGetUniformLocation(shader_program, "uCameraOffset");
 
-    // Set up the quad VAO and VBO
-    glGenVertexArrays(1, &vao_);
-    glGenBuffers(1, &vbo_);
-    glBindVertexArray(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    // Initialise the VAO and VBOs for rendering quads and instance data
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &quad_vbo);
+    glGenBuffers(1, &instance_vbo);
+
+    // Configure the quad vertex buffer
+    glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, QUAD_VERTICES.size() * sizeof(float), QUAD_VERTICES.data(), GL_STATIC_DRAW);
 
-    // Define vertex attributes
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    // Vertex position attribute
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, QUAD_VERTEX_STRIDE, nullptr);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, QUAD_VERTEX_STRIDE, reinterpret_cast<void*>(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // Configure the instance buffer
+    glBindBuffer(GL_ARRAY_BUFFER, instance_vbo);
+
+    // Instance offset attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, INSTANCE_STRIDE, nullptr);
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+
+    // Instance scale attribute
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, INSTANCE_STRIDE, reinterpret_cast<void*>(2 * sizeof(float)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribDivisor(3, 1);
+
+    // Instance depth attribute
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, INSTANCE_STRIDE, reinterpret_cast<void*>(3 * sizeof(float)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribDivisor(4, 1);
+
     // Set up texture uniform
-    glUseProgram(shader_program_);
-    glUniform1i(glGetUniformLocation(shader_program_, "uTexture"), 0);
+    glUseProgram(shader_program);
+    glUniform1i(glGetUniformLocation(shader_program, "uTexture"), 0);
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -177,9 +218,10 @@ class RenderContext {
 
   /// Destroy the render context.
   ~RenderContext() {
-    glDeleteBuffers(1, &vbo_);
-    glDeleteVertexArrays(1, &vao_);
-    glDeleteProgram(shader_program_);
+    glDeleteBuffers(1, &instance_vbo);
+    glDeleteBuffers(1, &quad_vbo);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteProgram(shader_program);
   }
 };
 }  // namespace
@@ -191,8 +233,8 @@ void sprite_render_system(Registry& registry, const Camera& camera) {
 
   // Bind the shader program and VAO
   const RenderContext& context{RenderContext::instance()};
-  glUseProgram(context.shader_program_);
-  glBindVertexArray(context.vao_);
+  glUseProgram(context.shader_program);
+  glBindVertexArray(context.vao);
 
   // Calculate the projection matrix
   const std::array projection_matrix{
@@ -221,46 +263,35 @@ void sprite_render_system(Registry& registry, const Camera& camera) {
       1.0F,
   };
 
-  // Update the projection matrix
-  glUniformMatrix4fv(context.projection_loc_, 1, GL_FALSE, projection_matrix.data());
+  // Update the projection matrix and camera offset
+  glUniformMatrix4fv(context.projection_loc, 1, GL_FALSE, projection_matrix.data());
+  const Vec2f camera_pixel_offset{camera.get_position() * -SPRITE_SIZE};
+  glUniform2f(context.camera_offset_loc, camera_pixel_offset.x, camera_pixel_offset.y);
 
-  // Render all game objects with Transform and Sprite components
-  for (auto const& [transform, sprite] : registry.view<components::Transform, components::Sprite>()) {
-    // Compute the model matrix for the sprite
-    const Vec2f camera_offset{(transform.position - camera.get_position()) * SPRITE_SIZE};
-    const float scaled_size{SPRITE_SIZE * sprite.scale};
-    const std::array model_matrix{
-        // Column 0 (scale X)
-        scaled_size,
-        0.0F,
-        0.0F,
-        0.0F,
+  // Batch sprites by texture ID
+  std::unordered_map<GLuint, std::vector<float>> batches;
+  for (const auto& [sprite, transform] : registry.view<components::Sprite, components::Transform>()) {
+    // Get or create an instance batch and then add the sprite's instance data to it
+    std::vector<float>& instance_data{batches[sprite.texture_id]};
+    const Vec2f world_offset{transform.position * SPRITE_SIZE};
+    const float scaled_sprite_size{sprite.scale * SPRITE_SIZE};
+    const float center_x{(SCREEN_WIDTH - scaled_sprite_size) / 2.0F};
+    const float center_y{(SCREEN_HEIGHT - scaled_sprite_size) / 2.0F};
+    instance_data.push_back(world_offset.x + center_x);
+    instance_data.push_back(world_offset.y + center_y);
+    instance_data.push_back(scaled_sprite_size);
+    instance_data.push_back(static_cast<float>(sprite.depth));
+  }
 
-        // Column 1 (scale Y)
-        0.0F,
-        scaled_size,
-        0.0F,
-        0.0F,
+  // Render each batch with instanced drawing
+  for (const auto& [texture_id, instances] : batches) {
+    // Upload instance data to the GPU
+    glBindBuffer(GL_ARRAY_BUFFER, context.instance_vbo);
+    glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(float), instances.data(), GL_DYNAMIC_DRAW);
 
-        // Column 2 (Z)
-        0.0F,
-        0.0F,
-        1.0F,
-        0.0F,
-
-        // Column 3 (translation)
-        camera_offset.x + ((SCREEN_WIDTH - scaled_size) / 2.0F),
-        camera_offset.y + ((SCREEN_HEIGHT - scaled_size) / 2.0F),
-        static_cast<float>(sprite.depth),
-        1.0F,
-    };
-
-    // Set the model matrix uniform and bind the sprite texture
-    glUniformMatrix4fv(context.model_loc_, 1, GL_FALSE, model_matrix.data());
-    glBindTexture(GL_TEXTURE_2D, sprite.texture_id);
-
-    // Draw the sprite quad
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    // Bind the texture and draw all instances
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, static_cast<GLsizei>(instances.size() / 4));
   }
 }
 }  // namespace exodus::ecs::systems
