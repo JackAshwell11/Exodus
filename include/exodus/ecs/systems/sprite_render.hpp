@@ -4,6 +4,10 @@
 namespace exodus {
 class Camera;
 
+namespace rendering {
+class Renderer;
+} // namespace rendering
+
 namespace ecs {
 class Registry;
 
@@ -12,7 +16,8 @@ namespace systems {
 ///
 /// @param registry The registry to operate on.
 /// @param camera The camera to render with.
-void sprite_render_system(Registry& registry, const Camera& camera);
+/// @param renderer The renderer to use for drawing to the screen.
+void sprite_render_system(Registry& registry, const Camera& camera, rendering::Renderer& renderer);
 }  // namespace systems
 }  // namespace ecs
 }  // namespace exodus

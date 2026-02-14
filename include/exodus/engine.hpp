@@ -7,6 +7,7 @@
 
 // Local headers
 #include "exodus/camera.hpp"
+#include "exodus/rendering/renderer.hpp"
 
 namespace exodus {
 namespace ecs {
@@ -47,7 +48,8 @@ class Engine {
   /// Process rendering logic for the game engine.
   ///
   /// @param delta_time The time interval since the last time the function was called.
-  void render(float delta_time);
+  /// @param renderer The renderer to use for drawing to the screen.
+  void render(float delta_time, rendering::Renderer& renderer);
 
  private:
   /// Manages game objects and their components.

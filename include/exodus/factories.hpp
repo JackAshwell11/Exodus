@@ -1,11 +1,11 @@
 // Ensure this file is only included once
 #pragma once
 
-// External headers
-#include <glad/gl.h>
-
 // Local headers
 #include "exodus/math.hpp"
+
+// Forward declare to avoid bringing in OpenGL headers
+using GLuint = unsigned int;
 
 namespace exodus {
 namespace ecs {
