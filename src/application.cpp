@@ -17,6 +17,7 @@
 #include "exodus/engine.hpp"
 #include "exodus/factories.hpp"
 #include "exodus/generation/generator.hpp"
+#include "rendering/opengl_renderer.hpp"
 
 namespace {
 /// The flags to initialise SDL_image with.
@@ -223,6 +224,7 @@ auto Application::run() -> int {
   float accumulator{0.0F};
 
   // Loop until the application is no longer running
+  rendering::OpenGLRenderer renderer;
   while (running_) {
     // Calculate the delta time since the last frame
     const uint64_t current_time{SDL_GetTicks64()};
@@ -240,7 +242,7 @@ auto Application::run() -> int {
       accumulator -= FIXED_TIMESTEP;
     }
     engine_->update(delta_time);
-    engine_->render(delta_time);
+    engine_->render(delta_time, renderer);
     SDL_GL_SwapWindow(window_);
   }
   return 0;
