@@ -1,7 +1,3 @@
-// Std headers
-#include <algorithm>
-#include <ranges>
-
 // Local headers
 #include "exodus/ecs/registry.hpp"
 #include "macros.hpp"
@@ -242,5 +238,24 @@ TEST_F(RegistryFixture, DestroyRemovesAllComponents) {
   registry.destroy(game_object_id);
   ASSERT_FALSE(registry.has_component<TestComponentOne>(game_object_id));
   ASSERT_FALSE(registry.has_component<TestComponentTwo>(game_object_id));
+}
+
+/// Test that Storage::remove() early returns when game_object_id >= sparse.size().
+TEST_F(RegistryFixture, RemoveComponentBeyondSparseSize) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentTwo>(game_object_id_one, 1.0F);
+  registry.add_component<TestComponentOne>(game_object_id_two, 42);
+  registry.destroy(game_object_id_two);
+  ASSERT_FALSE(registry.has(game_object_id_two));
+}
+
+/// Test that Storage::remove() early returns when index == INVALID_COMPONENT_INDEX.
+TEST_F(RegistryFixture, RemoveComponentWithInvalidIndex) {
+  const GameObjectID game_object_id{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id, 42);
+  registry.destroy(game_object_id);
+  registry.destroy(game_object_id);
+  ASSERT_FALSE(registry.has(game_object_id));
 }
 }  // namespace exodus::ecs

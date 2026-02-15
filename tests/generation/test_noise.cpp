@@ -1,4 +1,5 @@
 // Std headers
+#include <algorithm>
 #include <random>
 #include <ranges>
 #include <vector>
@@ -99,14 +100,14 @@ TEST(OpenSimplex2STest, OutputRange) {
 /// Test that nearby points have similar noise values (continuity).
 TEST(OpenSimplex2STest, ContinuityNearbyPointsSimilar) {
   constexpr double delta{0.001};
-  constexpr Vec2d center_point{5.0, 5.0};
-  const float center{noise(DEFAULT_SEED, center_point)};
-  const float right{noise(DEFAULT_SEED, center_point + Vec2d{delta, 0.0})};
-  const float up{noise(DEFAULT_SEED, center_point + Vec2d{0.0, delta})};
-  const float diagonal{noise(DEFAULT_SEED, center_point + Vec2d{delta, delta})};
-  ASSERT_LT(std::abs(center - right), 0.1F);
-  ASSERT_LT(std::abs(center - up), 0.1F);
-  ASSERT_LT(std::abs(center - diagonal), 0.1F);
+  constexpr Vec2d centre_point{5.0, 5.0};
+  const float centre_noise{noise(DEFAULT_SEED, centre_point)};
+  const float right_noise{noise(DEFAULT_SEED, centre_point + Vec2d{delta, 0.0})};
+  const float up_noise{noise(DEFAULT_SEED, centre_point + Vec2d{0.0, delta})};
+  const float diagonal_noise{noise(DEFAULT_SEED, centre_point + Vec2d{delta, delta})};
+  ASSERT_LT(std::abs(centre_noise - right_noise), 0.1F);
+  ASSERT_LT(std::abs(centre_noise - up_noise), 0.1F);
+  ASSERT_LT(std::abs(centre_noise - diagonal_noise), 0.1F);
 }
 
 /// Test that noise changes gradually without sudden jumps (smoothness).

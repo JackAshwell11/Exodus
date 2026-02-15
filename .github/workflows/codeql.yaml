@@ -26,7 +26,6 @@ jobs:
         with:
           languages: cpp
           build-mode: manual
-          setup-python-dependencies: false
       - name: Set up CMake
         uses: lukka/get-cmake@v4.2.3
       - name: Cache Conan

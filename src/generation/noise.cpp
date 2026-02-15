@@ -3,7 +3,6 @@
 
 // Std headers
 #include <array>
-#include <ranges>
 
 namespace {
 /// The normaliser for the gradient vectors.
@@ -63,12 +62,12 @@ constexpr std::array<exodus::Vec2f, 24> BASE_GRADIENTS{{
 
 /// Generate the pre-computed 2D gradient table.
 ///
-//// @return The generated 2D gradient table.
+/// @return The generated 2D gradient table.
 constexpr auto generate_gradients() -> std::array<exodus::Vec2f, GRADIENT_TABLE_SIZE> {
   std::array<exodus::Vec2f, GRADIENT_TABLE_SIZE> gradients;
   constexpr float scale{1.0F / NORMALISER};
-  for (auto [i, gradient] : std::views::enumerate(gradients)) {
-    gradient = BASE_GRADIENTS.at(i % BASE_GRADIENTS.size()) * scale;
+  for (std::size_t idx{0}; idx < gradients.size(); idx++) {
+    gradients.at(idx) = BASE_GRADIENTS.at(idx % BASE_GRADIENTS.size()) * scale;
   }
   return gradients;
 }
@@ -91,8 +90,8 @@ constexpr auto operator^(const std::uint64_t lhs, const exodus::Vec2u64& rhs) ->
 /// @param base_hash The pre-hashed base coordinates.
 /// @param offset The offset from the corner position.
 /// @return The gradient contribution value.
-constexpr auto gradient(const std::uint64_t seed, const exodus::Vec2u64& base_hash, const exodus::Vec2f& offset)
-    -> float {
+constexpr auto gradient(const std::uint64_t seed, const exodus::Vec2u64& base_hash,
+                        const exodus::Vec2f& offset) -> float {
   // Combine seed and cell hashes
   std::uint64_t hash{seed ^ base_hash};
 

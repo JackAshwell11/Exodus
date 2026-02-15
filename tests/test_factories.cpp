@@ -34,6 +34,7 @@ TEST_F(FactoriesFixture, GetTileTexturesReturnsReference) {
 
 /// Test that create_game_object() does not create a game object for an invalid tile type.
 TEST_F(FactoriesFixture, CreateGameObjectInvalidTileTypeDoesNothing) {
+  // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
   create_game_object(registry, static_cast<generation::TileType>(10), {0.0F, 0.0F});
   ASSERT_TRUE(registry.view<ecs::components::Transform>().empty());
 }

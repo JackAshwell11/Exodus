@@ -5,7 +5,7 @@
 
 namespace exodus {
 /// Test that the engine constructor creates an engine without throwing.
-TEST(EngineTest, ConstructorCreatesEngineWithoutThrowing) { ASSERT_NO_THROW(Engine engine); }
+TEST(EngineTest, ConstructorCreatesEngineWithoutThrowing) { ASSERT_NO_THROW(const Engine engine); }
 
 /// Test that the update method runs without throwing.
 TEST(EngineTest, UpdateRunsWithoutThrowing) {

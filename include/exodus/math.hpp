@@ -202,9 +202,11 @@ using Vec2d = Vec2<double>;
 using Vec2u64 = Vec2<std::uint64_t>;
 }  // namespace exodus
 
+// NOLINTBEGIN(bugprone-std-namespace-modification, cert-dcl58-cpp)
 template <typename T>
 struct std::hash<exodus::Vec2<T>> {
   auto operator()(const exodus::Vec2<T>& vec) const noexcept -> size_t {
     return hash<T>{}(vec.x) ^ (hash<T>{}(vec.y) << 1);
   }
 };
+// NOLINTEND(bugprone-std-namespace-modification, cert-dcl58-cpp)

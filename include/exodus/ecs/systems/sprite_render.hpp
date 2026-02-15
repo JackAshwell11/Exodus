@@ -6,7 +6,7 @@ class Camera;
 
 namespace rendering {
 class Renderer;
-} // namespace rendering
+}  // namespace rendering
 
 namespace ecs {
 class Registry;

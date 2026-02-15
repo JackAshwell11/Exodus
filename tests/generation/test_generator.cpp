@@ -47,7 +47,7 @@ TEST(GeneratorTest, TileDistributionProportions) {
   // Generate 100 chunks and count the occurrence of each tile type
   std::unordered_map<TileType, int> counts{};
   constexpr auto chunks{std::views::iota(0, 100) |
-                        std::views::transform([](const int i) { return generate_chunk({i, i}, 42); })};
+                        std::views::transform([](const int val) { return generate_chunk({val, val}, 42); })};
   std::ranges::for_each(chunks | std::views::join, [&](const TileType& tile) { counts[tile]++; });
 
   // Check that the proportions of the different tiles are different
