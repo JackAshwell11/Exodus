@@ -2,6 +2,7 @@
 #pragma once
 
 // Std headers
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <ranges>
@@ -46,6 +47,13 @@ class Registry {
       }
     }
     alive_[game_object_id] = false;
+  }
+
+  /// Get the total number of alive game objects in the registry.
+  ///
+  /// @return The total number of alive game objects in the registry.
+  [[nodiscard]] auto count() const noexcept -> std::size_t {
+    return std::ranges::count(alive_, true);
   }
 
   /// Add a component of a certain type to a game object in the registry ignoring if it already exists.
