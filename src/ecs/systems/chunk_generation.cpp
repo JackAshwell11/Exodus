@@ -1,9 +1,6 @@
 // Related header
 #include "exodus/ecs/systems/chunk_generation.hpp"
 
-// Std headers
-#include <unordered_set>
-
 // Local headers
 #include "exodus/ecs/components/player.hpp"
 #include "exodus/ecs/components/transform.hpp"
@@ -15,14 +12,6 @@ namespace exodus::ecs {
 namespace {
 /// The radius (in chunks) around the player within which chunks should be generated and loaded.
 constexpr int CHUNK_GENERATION_RADIUS{2};
-
-/// Get the set of chunks which have already been generated.
-///
-/// @return Reference to the set of generated chunks.
-auto get_generated_chunks() -> std::unordered_set<Vec2i>& {
-  static std::unordered_set<Vec2i> generated_chunks;
-  return generated_chunks;
-}
 
 /// Generate a chunk of game objects at the specified chunk position and seed.
 ///
@@ -42,6 +31,11 @@ void generate_chunk(Registry& registry, const Vec2i& chunk_pos, const int seed) 
 }  // namespace
 
 namespace systems {
+auto get_generated_chunks() -> std::unordered_set<Vec2i>& {
+  static std::unordered_set<Vec2i> generated_chunks;
+  return generated_chunks;
+}
+
 void chunk_generation_system(Registry& registry) {
   for (const auto& [player, transform] : registry.view<components::Player, components::Transform>()) {
     const Vec2f player_position{transform.position};

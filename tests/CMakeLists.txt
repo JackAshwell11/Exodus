@@ -1,7 +1,17 @@
 # Create the test executable
 add_executable(exodus_core_tests
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_camera_follow.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_chunk_generation.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_input.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_movement.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_sprite_render.cpp
         ${CMAKE_SOURCE_DIR}/tests/ecs/test_registry.cpp
+        ${CMAKE_SOURCE_DIR}/tests/generation/test_generator.cpp
         ${CMAKE_SOURCE_DIR}/tests/generation/test_noise.cpp
+        ${CMAKE_SOURCE_DIR}/tests/test_camera.cpp
+        ${CMAKE_SOURCE_DIR}/tests/test_engine.cpp
+        ${CMAKE_SOURCE_DIR}/tests/test_factories.cpp
+        ${CMAKE_SOURCE_DIR}/tests/test_math.cpp
 )
 target_include_directories(exodus_core_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/tests

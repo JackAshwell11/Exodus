@@ -23,8 +23,8 @@ constexpr std::array<std::pair<float, exodus::generation::TileType>, 4> TILE_DIS
 /// @param noise The noise value.
 /// @return The corresponding TileType.
 constexpr auto tile_from_noise(const float noise) -> exodus::generation::TileType {
-  float cumulative_threshold = 0.0F;
-  const float mapped = (noise + 1.0F) * 0.5F;
+  float cumulative_threshold{0.0F};
+  const float mapped{(noise + 1.0F) * 0.5F};
   for (const auto& [weight, tile] : TILE_DISTRIBUTION) {
     cumulative_threshold += weight;
     if (mapped <= cumulative_threshold) {
