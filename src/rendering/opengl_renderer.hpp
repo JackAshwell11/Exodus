@@ -20,12 +20,25 @@ class OpenGLRenderer final : public Renderer {
   /// Destroy the renderer.
   ~OpenGLRenderer() override;
 
+  /// Deleted copy constructor to prevent copying.
+  OpenGLRenderer(const OpenGLRenderer&) = delete;
+
+  /// Deleted copy assignment operator to prevent copying.
+  auto operator=(const OpenGLRenderer&) -> OpenGLRenderer& = delete;
+
+  /// Deleted move constructor to prevent moving.
+  OpenGLRenderer(OpenGLRenderer&&) noexcept = delete;
+
+  /// Deleted move assignment operator to prevent moving.
+  auto operator=(OpenGLRenderer&&) noexcept -> OpenGLRenderer& = delete;
+
   /// Publish batches of renderable instances to the renderer.
   ///
   /// @param batches A map of texture IDs to their associated instances.
   /// @param projection_matrix A 4x4 projection matrix to apply to all instances.
   /// @param offset The offset which should be applied to all positions.
-  void publish(RenderBatches batches, const std::array<float, 16>& projection_matrix, const Vec2f& offset) override;
+  void publish(RenderBatches batches, const std::array<float, PROJECTION_MATRIX_SIZE>& projection_matrix,
+               const Vec2f& offset) override;
 
   /// Flush all published batches to the screen.
   void flush() override;
@@ -53,7 +66,7 @@ class OpenGLRenderer final : public Renderer {
   RenderBatches frame_batches_;
 
   /// The 4x4 projection matrix for the current frame.
-  std::array<float, 16> frame_projection_{};
+  std::array<float, PROJECTION_MATRIX_SIZE> frame_projection_{};
 
   /// The offset to apply to all positions in the current frame.
   Vec2f frame_offset_;

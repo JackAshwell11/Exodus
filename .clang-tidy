@@ -27,7 +27,9 @@ WarningsAsErrors: "*"
 CheckOptions:
   - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value: 1
+  - key: readability-identifier-length.IgnoredLoopCounterNames
+    value: "^[ijkxy_]$"
   - key: readability-identifier-length.IgnoredParameterNames
     value: "^[ijkxy_]$"
-  - key: readability-identifier-length.IgnoredLoopCounterNames
+  - key: readability-identifier-length.IgnoredVariableNames
     value: "^[ijkxy_]$"

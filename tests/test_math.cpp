@@ -309,9 +309,9 @@ TEST_F(Vec2Fixture, DotProductWithZeroVector) { ASSERT_EQ(vec_a.dot(zero), 0.0F)
 
 /// Test that computing the dot product of a vector with a negative vector works correctly.
 TEST_F(Vec2Fixture, DotProductWithNegativeVector) {
-  Vec2f v1{2.0F, 3.0F};
-  Vec2f v2{-2.0F, -3.0F};
-  ASSERT_FLOAT_EQ(v1.dot(v2), -13.0F);
+  constexpr Vec2f vec_one{2.0F, 3.0F};
+  constexpr Vec2f vec_two{-2.0F, -3.0F};
+  ASSERT_FLOAT_EQ(vec_one.dot(vec_two), -13.0F);
 }
 
 /// Test that computing the dot product of two orthogonal vectors returns zero.

@@ -2,10 +2,8 @@
 #include "exodus/application.hpp"
 
 // Std headers
-#include <array>
 #include <iostream>
 #include <ranges>
-#include <span>
 
 // External headers
 #include <SDL.h>
@@ -16,7 +14,6 @@
 #include "exodus/ecs/systems/input.hpp"
 #include "exodus/engine.hpp"
 #include "exodus/factories.hpp"
-#include "exodus/generation/generator.hpp"
 #include "rendering/opengl_renderer.hpp"
 
 namespace {
@@ -91,11 +88,12 @@ namespace {
 /// Load the textures for each tile type into the asset manager.
 void load_tile_textures() {
   std::unordered_map<generation::TileType, GLuint>& tile_textures{get_tile_textures()};
-  for (const auto& [i, sprite_path] : std::ranges::views::enumerate(TILE_SPRITE_PATHS)) {
-    if (tile_textures.contains(static_cast<generation::TileType>(i))) {
+  for (size_t idx{0}; idx < TILE_SPRITE_PATHS.size(); idx++) {
+    const auto tile_type{static_cast<generation::TileType>(idx)};
+    if (tile_textures.contains(tile_type)) {
       continue;
     }
-    tile_textures[static_cast<generation::TileType>(i)] = load(sprite_path);
+    tile_textures[tile_type] = load(TILE_SPRITE_PATHS.at(idx));
   }
 }
 
@@ -118,10 +116,9 @@ void update_input_state() {
 }
 }  // namespace
 
-Application::Application(std::string title, const int width, const int height)
+Application::Application(std::string title, const Vec2f& size)
     : title_(std::move(title)),
-      width_(width),
-      height_(height),
+      size_(size),
       window_(nullptr),
       gl_context_(nullptr),
       engine_(nullptr),
@@ -166,8 +163,8 @@ auto Application::initialise() -> bool {
   SDL_GL_SetSwapInterval(1);
 
   // Create the SDL window
-  window_ = SDL_CreateWindow(title_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width_, height_,
-                             SDL_WINDOW_OPENGL);
+  window_ = SDL_CreateWindow(title_.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<int>(size_.x),
+                             static_cast<int>(size_.y), SDL_WINDOW_OPENGL);
   if (window_ == nullptr) {
     std::cerr << "Failed to create window: " << SDL_GetError() << "\n";
     SDL_Quit();
@@ -185,6 +182,7 @@ auto Application::initialise() -> bool {
   SDL_GL_MakeCurrent(window_, gl_context_);
 
   // Load OpenGL functions using GLAD
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   if (gladLoadGL(reinterpret_cast<GLADloadfunc>(SDL_GL_GetProcAddress)) == 0) {
     std::cerr << "Failed to load OpenGL functions\n";
     SDL_GL_DeleteContext(gl_context_);

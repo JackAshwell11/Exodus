@@ -3,16 +3,17 @@
 
 // Std headers
 #include <memory>
-#include <unordered_set>
-
-// Local headers
-#include "exodus/camera.hpp"
-#include "exodus/rendering/renderer.hpp"
 
 namespace exodus {
+class Camera;
+
 namespace ecs {
 class Registry;
 }  // namespace ecs
+
+namespace rendering {
+class Renderer;
+}  // namespace rendering
 
 /// Represents the core game engine that manages the game state and updates.
 class Engine {
@@ -56,9 +57,6 @@ class Engine {
   std::unique_ptr<ecs::Registry> registry_;
 
   /// The camera used for rendering the game world.
-  Camera camera_;
-
-  /// The chunks which have already been generated.
-  std::unordered_set<Vec2i> generated_chunks_;
+  std::unique_ptr<Camera> camera_;
 };
 }  // namespace exodus

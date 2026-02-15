@@ -8,29 +8,26 @@
 #include "exodus/ecs/components/transform.hpp"
 #include "exodus/ecs/components/velocity.hpp"
 #include "exodus/ecs/registry.hpp"
-#include "exodus/generation/generator.hpp"
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers)
 namespace exodus {
 namespace {
 /// A sentinel value representing an uninitialised OpenGL texture ID (texture IDs start at 1).
 constexpr GLuint INVALID_TEXTURE_ID{0};
 
-/// The mapping of tile types to texture IDs.
-std::unordered_map<generation::TileType, GLuint> tile_textures{};
-
 /// The type of factory function to create a game object.
-using FactoryFn = void (*)(ecs::Registry&, GameObjectID, const Vec2f&, GLuint);
+using FactoryFn = void (*)(ecs::Registry&, ecs::GameObjectID, const Vec2f&, GLuint);
 
 /// Add the components for the terrain game object.
-constexpr FactoryFn TERRAIN_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id,
+constexpr FactoryFn TERRAIN_FACTORY{[](ecs::Registry& registry, const ecs::GameObjectID game_object_id,
                                        const Vec2f& position, const GLuint texture_id) -> void {
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 0);
   registry.add_component<ecs::components::Transform>(game_object_id, position);
 }};
 
 /// Add the components for the player game object.
-constexpr FactoryFn PLAYER_FACTORY{[](ecs::Registry& registry, const GameObjectID game_object_id, const Vec2f& position,
-                                      const GLuint texture_id) -> void {
+constexpr FactoryFn PLAYER_FACTORY{[](ecs::Registry& registry, const ecs::GameObjectID game_object_id,
+                                      const Vec2f& position, const GLuint texture_id) -> void {
   registry.add_component<ecs::components::KeyboardControlled>(game_object_id);
   registry.add_component<ecs::components::Player>(game_object_id);
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 1, 2.0F);
@@ -57,7 +54,10 @@ constexpr auto TILE_TABLE{std::to_array<FactoryFn>({
 })};
 }  // namespace
 
-auto get_tile_textures() -> std::unordered_map<generation::TileType, GLuint>& { return tile_textures; }
+auto get_tile_textures() -> std::unordered_map<generation::TileType, GLuint>& {
+  static std::unordered_map<generation::TileType, GLuint> tile_textures{};
+  return tile_textures;
+}
 
 void create_game_object(ecs::Registry& registry, const generation::TileType& tile_type, const Vec2f& position) {
   // Check if the tile type exists
@@ -68,9 +68,10 @@ void create_game_object(ecs::Registry& registry, const generation::TileType& til
 
   // Create the game object
   const auto& factory{TILE_TABLE.at(index)};
-  const GameObjectID game_object_id{registry.create()};
+  const ecs::GameObjectID game_object_id{registry.create()};
   const GLuint texture_id{
       get_tile_textures().try_emplace(tile_type, static_cast<GLuint>(INVALID_TEXTURE_ID)).first->second};
   factory(registry, game_object_id, position, texture_id);
 }
 }  // namespace exodus
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers)

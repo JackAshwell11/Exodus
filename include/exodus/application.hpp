@@ -5,11 +5,12 @@
 #include <memory>
 #include <string>
 
-// Forward declarations
+// Local headers
+#include "exodus/math.hpp"
+
 struct SDL_Window;
 
 namespace exodus {
-// Forward declarations
 class Engine;
 
 /// Represents the main application that manages SDL, OpenGL, and the game loop.
@@ -17,10 +18,9 @@ class Application {
  public:
   /// Construct the application.
   ///
-  /// @param title - The window title.
-  /// @param width - The window width.
-  /// @param height - The window height.
-  explicit Application(std::string title, int width, int height);
+  /// @param title The window title.
+  /// @param size The window size.
+  explicit Application(std::string title, const Vec2f& size);
 
   /// Destroy the application.
   ~Application();
@@ -54,11 +54,8 @@ class Application {
   /// The window title.
   std::string title_;
 
-  /// The window width.
-  int width_;
-
-  /// The window height.
-  int height_;
+  /// The window size.
+  Vec2f size_;
 
   /// The SDL window.
   SDL_Window* window_;

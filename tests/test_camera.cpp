@@ -7,7 +7,7 @@ namespace exodus {
 class CameraFixture : public testing::Test {
  protected:
   /// The camera for testing.
-  Camera camera{};
+  Camera camera;
 };
 
 /// Test that initialising the camera without a position sets the default position and zoom level correctly.

@@ -35,7 +35,7 @@ void input_system(Registry& registry) {
     }
 
     // Update the velocity with a normalised direction
-    if (const Vec2f normalised_direction = input_direction.normalise(); normalised_direction != Vec2f{0.0F, 0.0F}) {
+    if (const Vec2f normalised_direction{input_direction.normalise()}; normalised_direction != Vec2f{0.0F, 0.0F}) {
       // Update velocity based on keyboard input
       velocity.direction = normalised_direction;
     } else {

@@ -2,14 +2,13 @@
 #include "opengl_renderer.hpp"
 
 // Std headers
-#include <array>
 #include <string_view>
 
 // External headers
 #include <glad/gl.h>
 
 namespace {
-/// The stride of quad vertex data (position + texture coordinates).
+/// The stride of quad vertex data (position and texture coordinates).
 constexpr size_t QUAD_VERTEX_STRIDE{4 * sizeof(float)};
 
 /// The stride of instance data (offset + scale + depth).
@@ -68,6 +67,9 @@ constexpr std::array QUAD_VERTICES{
     1.0F, 0.0F, 1.0F, 0.0F   // Bottom-right
 };
 
+/// The number of vertices in a quad (2 triangles with 3 vertices each).
+constexpr GLsizei QUAD_VERTEX_COUNT{static_cast<GLsizei>(QUAD_VERTICES.size()) / 4};
+
 /// Compile an OpenGL shader from source code.
 ///
 /// @param type The type of shader to compile.
@@ -79,26 +81,32 @@ auto compile_shader(const GLenum type, const char* source) -> GLuint {
   glCompileShader(shader);
   return shader;
 }
-}  // namespace
 
-namespace exodus::rendering {
-OpenGLRenderer::OpenGLRenderer() {
+/// Create and link the shader program for sprite rendering.
+///
+/// @return The OpenGL shader program ID.
+auto create_shader_program() -> GLuint {
   // Compile the sprite vertex and fragment shaders
   const GLuint vertex_shader{compile_shader(GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE.data())};
   const GLuint fragment_shader{compile_shader(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE.data())};
 
   // Link the shaders into a shader program
-  shader_program_ = glCreateProgram();
-  glAttachShader(shader_program_, vertex_shader);
-  glAttachShader(shader_program_, fragment_shader);
-  glLinkProgram(shader_program_);
+  const GLuint program{glCreateProgram()};
+  glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
+  glLinkProgram(program);
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
-  // Cache uniform locations for performance
-  projection_loc_ = glGetUniformLocation(shader_program_, "uProjection");
-  camera_offset_loc_ = glGetUniformLocation(shader_program_, "uCameraOffset");
+  return program;
+}
+}  // namespace
 
+namespace exodus::rendering {
+OpenGLRenderer::OpenGLRenderer()
+    : shader_program_{create_shader_program()},
+      projection_loc_{glGetUniformLocation(shader_program_, "uProjection")},
+      camera_offset_loc_{glGetUniformLocation(shader_program_, "uCameraOffset")} {
   // Initialise the VAO and VBOs for rendering quads and instance data
   glGenVertexArrays(1, &vao_);
   glBindVertexArray(vao_);
@@ -114,6 +122,7 @@ OpenGLRenderer::OpenGLRenderer() {
   glEnableVertexAttribArray(0);
 
   // Texture coordinate attribute
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, QUAD_VERTEX_STRIDE, reinterpret_cast<void*>(2 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
@@ -126,11 +135,13 @@ OpenGLRenderer::OpenGLRenderer() {
   glVertexAttribDivisor(2, 1);
 
   // Instance scale attribute
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
   glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, INSTANCE_STRIDE, reinterpret_cast<void*>(2 * sizeof(float)));
   glEnableVertexAttribArray(3);
   glVertexAttribDivisor(3, 1);
 
   // Instance depth attribute
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
   glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, INSTANCE_STRIDE, reinterpret_cast<void*>(3 * sizeof(float)));
   glEnableVertexAttribArray(4);
   glVertexAttribDivisor(4, 1);
@@ -150,7 +161,8 @@ OpenGLRenderer::~OpenGLRenderer() {
   glDeleteProgram(shader_program_);
 }
 
-void OpenGLRenderer::publish(RenderBatches batches, const std::array<float, 16>& projection_matrix, const Vec2f& offset) {
+void OpenGLRenderer::publish(RenderBatches batches, const std::array<float, PROJECTION_MATRIX_SIZE>& projection_matrix,
+                             const Vec2f& offset) {
   frame_batches_ = std::move(batches);
   frame_projection_ = projection_matrix;
   frame_offset_ = offset;
@@ -172,12 +184,13 @@ void OpenGLRenderer::flush() {
   for (const auto& [texture_id, instances] : frame_batches_) {
     // Upload instance data to the GPU
     glBindBuffer(GL_ARRAY_BUFFER, instance_vbo_);
-    glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(RenderInstance), instances.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(instances.size() * sizeof(RenderInstance)), instances.data(),
+                 GL_DYNAMIC_DRAW);
 
     // Bind the texture and draw all instances
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, static_cast<GLsizei>(instances.size()));
+    glDrawArraysInstanced(GL_TRIANGLES, 0, QUAD_VERTEX_COUNT, static_cast<GLsizei>(instances.size()));
   }
   frame_batches_.clear();
 }
-}  // exodus::rendering
+}  // namespace exodus::rendering

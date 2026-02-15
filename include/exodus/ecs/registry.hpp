@@ -9,11 +9,10 @@
 #include <vector>
 
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
-namespace exodus {
+namespace exodus::ecs {
 /// Represents unique identifiers for game objects
 using GameObjectID = std::uint32_t;
 
-namespace ecs {
 /// Manages game objects and their components in the registry.
 class Registry {
  public:
@@ -52,9 +51,7 @@ class Registry {
   /// Get the total number of alive game objects in the registry.
   ///
   /// @return The total number of alive game objects in the registry.
-  [[nodiscard]] auto count() const noexcept -> std::size_t {
-    return std::ranges::count(alive_, true);
-  }
+  [[nodiscard]] auto count() const noexcept -> std::size_t { return std::ranges::count(alive_, true); }
 
   /// Add a component of a certain type to a game object in the registry ignoring if it already exists.
   ///
@@ -108,7 +105,7 @@ class Registry {
     if (!has(game_object_id)) {
       return false;
     }
-    const int type_id{component_type_id<Component>()};
+    const std::size_t type_id{component_type_id<Component>()};
     if (type_id >= storages_.size() || !storages_[type_id]) {
       return false;
     }
@@ -223,15 +220,15 @@ class Registry {
   GameObjectID next_game_object_id_{0};
 
   /// The next component type ID to use.
-  inline static int next_component_type_id_{0};
+  inline static std::size_t next_component_type_id_{0};
 
   /// Get the component type ID for a given component type.
   ///
   /// @return The component type ID for the given component type.
   template <typename Component>
-  static auto component_type_id() -> int {
+  static auto component_type_id() -> std::size_t {
     (void)typeid(Component);  // Ignore unused template warning
-    static int const component_type_id{next_component_type_id_++};
+    static std::size_t const component_type_id{next_component_type_id_++};
     return component_type_id;
   }
 
@@ -245,7 +242,7 @@ class Registry {
   template <typename Component>
   auto get_storage() -> Storage<Component>& {
     // Resize storages vector if needed
-    const int type_id{component_type_id<Component>()};
+    const std::size_t type_id{component_type_id<Component>()};
     if (type_id >= storages_.size()) {
       storages_.resize(type_id + 1);
     }
@@ -260,6 +257,5 @@ class Registry {
   /// A vector of booleans indicating whether each game object ID is alive or not, indexed by game object ID.
   std::vector<bool> alive_;
 };
-}  // namespace ecs
-}  // namespace exodus
+}  // namespace exodus::ecs
 // NOLINTEND(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)

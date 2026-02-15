@@ -3,7 +3,6 @@
 
 // Std headers
 #include <array>
-#include <unordered_map>
 
 // Local headers
 #include "exodus/rendering/renderer.hpp"
@@ -16,7 +15,8 @@ struct TestRenderer final : Renderer {
   /// @param batches A map of texture IDs to their associated instances.
   /// @param projection_matrix A 4x4 projection matrix to apply to all instances.
   /// @param offset The offset which should be applied to all positions.
-  void publish(RenderBatches batches, const std::array<float, 16>& projection_matrix, const Vec2f& offset) override {
+  void publish(RenderBatches batches, const std::array<float, PROJECTION_MATRIX_SIZE>& projection_matrix,
+               const Vec2f& offset) override {
     render_batches = std::move(batches);
     proj_matrix = projection_matrix;
     render_offset = offset;
@@ -29,7 +29,7 @@ struct TestRenderer final : Renderer {
   RenderBatches render_batches;
 
   /// The 4x4 projection matrix published to the renderer.
-  std::array<float, 16> proj_matrix{};
+  std::array<float, PROJECTION_MATRIX_SIZE> proj_matrix{};
 
   /// The offset published to the renderer.
   Vec2f render_offset;

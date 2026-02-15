@@ -9,7 +9,7 @@ namespace exodus {
 class Camera {
  public:
   /// Construct the camera at the given position.
-  explicit Camera(const Vec2f& position = Vec2f{0.0F, 0.0F}) : position_(position) {}
+  explicit Camera(const Vec2f& position = {0.0F, 0.0F}) : position_(position) {}
 
   /// Get the position of the camera in world coordinates.
   ///
