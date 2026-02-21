@@ -77,4 +77,30 @@ TEST_F(ChunkGenerationFixture, MultiplePlayers) {
   constexpr std::size_t expected_new_game_objects{204800};
   ASSERT_EQ(registry.count(), 2 + expected_new_game_objects);  // Both players are created too
 }
+
+/// Test that chunks are generated for negative player positions.
+TEST_F(ChunkGenerationFixture, GeneratesChunksAtNegativePositions) {
+  const GameObjectID player_id{registry.create()};
+  registry.add_component<components::Player>(player_id);
+  registry.add_component<components::Transform>(player_id, Vec2f{-100.0F, -100.0F});
+  chunk_generation_system(registry);
+
+  // Chunk generation has a radius of 2 so 5x5 chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
+  constexpr std::size_t expected_new_game_objects{102400};
+  ASSERT_EQ(registry.count(), 1 + expected_new_game_objects);
+}
+
+/// Test that tile positions in negative chunks are correctly grid-aligned.
+TEST_F(ChunkGenerationFixture, NegativeChunkTilePositionsAreGridAligned) {
+  const GameObjectID player_id{registry.create()};
+  registry.add_component<components::Player>(player_id);
+  registry.add_component<components::Transform>(player_id, Vec2f{-100.0F, -100.0F});
+  chunk_generation_system(registry);
+
+  // Verify every generated tile has integer-aligned positions
+  for (const auto& [transform] : registry.view<components::Transform>()) {
+    ASSERT_NEAR(transform.position.x - std::floor(transform.position.x), 0.0F, 1e-5F);
+    ASSERT_NEAR(transform.position.y - std::floor(transform.position.y), 0.0F, 1e-5F);
+  }
+}
 }  // namespace exodus::ecs::systems

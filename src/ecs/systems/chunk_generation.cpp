@@ -20,12 +20,13 @@ constexpr int CHUNK_GENERATION_RADIUS{2};
 /// @param seed The seed to use for generating the chunk.
 void generate_chunk(Registry& registry, const Vec2i& chunk_pos, const int seed) {
   const auto chunk{generation::generate_chunk(chunk_pos, seed)};
-  for (size_t i{0}; i < chunk.size(); i++) {
-    create_game_object(registry, chunk.at(i),
-                       {static_cast<float>(i % generation::CHUNK_SIZE) +
-                            static_cast<float>(chunk_pos.x * static_cast<int>(generation::CHUNK_SIZE)),
-                        static_cast<float>(i) / static_cast<float>(generation::CHUNK_SIZE) +
-                            static_cast<float>(chunk_pos.y * static_cast<int>(generation::CHUNK_SIZE))});
+  constexpr auto chunk_size{static_cast<int>(generation::CHUNK_SIZE)};
+  for (int i{0}; i < static_cast<int>(chunk.size()); i++) {
+    const int tile_x{i % chunk_size};
+    const int tile_y{i / chunk_size};
+    create_game_object(registry, chunk.at(static_cast<size_t>(i)),
+                       {static_cast<float>(tile_x) + static_cast<float>(chunk_pos.x * chunk_size),
+                        static_cast<float>(tile_y) + static_cast<float>(chunk_pos.y * chunk_size)});
   }
 }
 }  // namespace
@@ -39,8 +40,9 @@ auto get_generated_chunks() -> std::unordered_set<Vec2i>& {
 void chunk_generation_system(Registry& registry) {
   for (const auto& [player, transform] : registry.view<components::Player, components::Transform>()) {
     const Vec2f player_position{transform.position};
-    const Vec2i player_chunk_pos{static_cast<int>(std::floor(player_position.x / generation::CHUNK_SIZE)),
-                                 static_cast<int>(std::floor(player_position.y / generation::CHUNK_SIZE))};
+    const Vec2i player_chunk_pos{
+        static_cast<int>(std::floor(player_position.x / static_cast<float>(generation::CHUNK_SIZE))),
+        static_cast<int>(std::floor(player_position.y / static_cast<float>(generation::CHUNK_SIZE)))};
     for (int chunk_x{-CHUNK_GENERATION_RADIUS}; chunk_x <= CHUNK_GENERATION_RADIUS; chunk_x++) {
       for (int chunk_y{-CHUNK_GENERATION_RADIUS}; chunk_y <= CHUNK_GENERATION_RADIUS; chunk_y++) {
         const Vec2i chunk_pos{player_chunk_pos.x + chunk_x, player_chunk_pos.y + chunk_y};
