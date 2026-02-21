@@ -250,12 +250,124 @@ TEST_F(RegistryFixture, RemoveComponentBeyondSparseSize) {
   ASSERT_FALSE(registry.has(game_object_id_two));
 }
 
-/// Test that Storage::remove() early returns when index == INVALID_COMPONENT_INDEX.
+/// Test that Storage::remove() early returns when index == INVALID_INDEX.
 TEST_F(RegistryFixture, RemoveComponentWithInvalidIndex) {
   const GameObjectID game_object_id{registry.create()};
   registry.add_component<TestComponentOne>(game_object_id, 42);
   registry.destroy(game_object_id);
   registry.destroy(game_object_id);
   ASSERT_FALSE(registry.has(game_object_id));
+}
+
+/// Test that views are cached and reused when accessed multiple times.
+TEST_F(RegistryFixture, ViewCachingBasic) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentOne>(game_object_id_two, 20);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+}
+
+/// Test that a view cache is invalidated when a relevant component is added.
+TEST_F(RegistryFixture, ViewCacheInvalidatedOnComponentAdd) {
+  const GameObjectID game_object_id_one{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_two, 20);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+}
+
+/// Test that a view cache is invalidated when a game object is destroyed.
+TEST_F(RegistryFixture, ViewCacheInvalidatedOnDestroy) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentOne>(game_object_id_two, 20);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+  registry.destroy(game_object_id_one);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+}
+
+/// Test that view cache is invalidated when a new game object is created.
+TEST_F(RegistryFixture, ViewCacheInvalidatedOnCreate) {
+  const GameObjectID game_object_id_one{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  const GameObjectID game_object_id_two{registry.create()};
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  registry.add_component<TestComponentOne>(game_object_id_two, 20);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+}
+
+/// Test that unrelated component changes don't invalidate unrelated views.
+TEST_F(RegistryFixture, ViewCacheNotInvalidatedByUnrelatedComponents) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentTwo>(game_object_id_two, 20.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  const GameObjectID game_object_id_three{registry.create()};
+  registry.add_component<TestComponentTwo>(game_object_id_three, 30.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentTwo>()), 2);
+}
+
+/// Test that a multi-component view cache is invalidated when any relevant component is added.
+TEST_F(RegistryFixture, MultiComponentViewCacheInvalidation) {
+  const GameObjectID game_object_id_one{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentTwo>(game_object_id_one, 20.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 1);
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_two, 30);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 1);
+  registry.add_component<TestComponentTwo>(game_object_id_two, 40.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 2);
+}
+
+/// Test that a view cache handles repeated adds of the same component type correctly.
+TEST_F(RegistryFixture, ViewCacheWithRepeatedComponentAdds) {
+  const GameObjectID game_object_id_one{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  registry.add_component<TestComponentOne>(game_object_id_one, 20);
+  const auto count{std::ranges::count_if(registry.view<TestComponentOne>(), [](const auto& tuple) {
+    const auto& [comp]{tuple};
+    return comp.value == 10;
+  })};
+  ASSERT_EQ(count, 1);
+}
+
+/// Test that a view cache is properly invalidated when destroying objects with multiple components.
+TEST_F(RegistryFixture, ViewCacheInvalidatedOnDestroyMultiComponent) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentTwo>(game_object_id_one, 20.0F);
+  registry.add_component<TestComponentOne>(game_object_id_two, 30);
+  registry.add_component<TestComponentTwo>(game_object_id_two, 40.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 2);
+  registry.destroy(game_object_id_one);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 1);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentTwo>()), 1);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 1);
+}
+
+/// Test that multiple different view types maintain separate caches.
+TEST_F(RegistryFixture, MultipleDifferentViewCaches) {
+  const GameObjectID game_object_id_one{registry.create()};
+  const GameObjectID game_object_id_two{registry.create()};
+  registry.add_component<TestComponentOne>(game_object_id_one, 10);
+  registry.add_component<TestComponentTwo>(game_object_id_one, 20.0F);
+  registry.add_component<TestComponentOne>(game_object_id_two, 30);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentTwo>()), 1);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 1);
+  registry.add_component<TestComponentTwo>(game_object_id_two, 40.0F);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne>()), 2);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentTwo>()), 2);
+  ASSERT_EQ(std::ranges::distance(registry.view<TestComponentOne, TestComponentTwo>()), 2);
 }
 }  // namespace exodus::ecs
