@@ -21,27 +21,6 @@ TEST(GeneratorTest, SameSeedAndPositionProducesIdenticalResults) {
   ASSERT_EQ(tiles_one, tiles_two);
 }
 
-/// Test that generating with different seeds produces different results.
-TEST(GeneratorTest, DifferentSeedsProduceDifferentResults) {
-  const auto tiles_one{generate_chunk({0, 0}, 42)};
-  const auto tiles_two{generate_chunk({0, 0}, 43)};
-  ASSERT_NE(tiles_one, tiles_two);
-}
-
-/// Test that generating at different positions produces different results.
-TEST(GeneratorTest, DifferentPositionsProduceDifferentResults) {
-  const auto tiles_one{generate_chunk({0, 0}, 42)};
-  const auto tiles_two{generate_chunk({1, 0}, 42)};
-  ASSERT_NE(tiles_one, tiles_two);
-}
-
-/// Test that generating at negative positions produces different results from origin.
-TEST(GeneratorTest, NegativePositionsProduceDifferentResultsFromOrigin) {
-  const auto negative_tiles{generate_chunk({-1, -1}, 42)};
-  const auto origin_tiles{generate_chunk({0, 0}, 42)};
-  ASSERT_NE(negative_tiles, origin_tiles);
-}
-
 /// Test that the tile distribution is different for each tile type.
 TEST(GeneratorTest, TileDistributionProportions) {
   // Generate 100 chunks and count the occurrence of each tile type

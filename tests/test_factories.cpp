@@ -48,6 +48,6 @@ TEST_P(FactoriesParamFixture, CreateGameObjectCreatesGameObject) {
 /// Create a parameterised test for each tile type.
 INSTANTIATE_TEST_SUITE_P(FactoriesTests, FactoriesParamFixture,
                          testing::Values(generation::TileType::Player, generation::TileType::Grass,
-                                         generation::TileType::Water, generation::TileType::Sand,
+                                         generation::TileType::Water, generation::TileType::Hills,
                                          generation::TileType::Mountain));
 }  // namespace exodus

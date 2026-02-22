@@ -46,7 +46,7 @@ constexpr auto TILE_TABLE{std::to_array<FactoryFn>({
     /// Water
     TERRAIN_FACTORY,
 
-    /// Sand
+    /// Hills
     TERRAIN_FACTORY,
 
     /// Mountain
