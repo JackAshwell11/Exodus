@@ -13,20 +13,32 @@ namespace {
 /// The radius (in chunks) around the player within which chunks should be generated and loaded.
 constexpr int CHUNK_GENERATION_RADIUS{2};
 
+/// Convert a tile position within a chunk to world coordinates based on the chunk's position in the world.
+///
+/// @param tile_pos The position of the tile within the chunk.
+/// @param chunk_pos The position of the chunk.
+/// @return The world coordinates corresponding to the tile position.
+constexpr auto convert_tile_to_world(const Vec2i& tile_pos, const Vec2i& chunk_pos) -> Vec2f {
+  return Vec2f{tile_pos + (chunk_pos * generation::CHUNK_SIZE)};
+};
+
 /// Generate a chunk of game objects at the specified chunk position and seed.
 ///
 /// @param registry The registry to create the game objects in.
 /// @param chunk_pos The position of the chunk to generate, in chunk coordinates.
 /// @param seed The seed to use for generating the chunk.
-void generate_chunk(Registry& registry, const Vec2i& chunk_pos, const int seed) {
-  const auto chunk{generation::generate_chunk(chunk_pos, seed)};
-  constexpr auto chunk_size{static_cast<int>(generation::CHUNK_SIZE)};
-  for (int i{0}; i < static_cast<int>(chunk.size()); i++) {
-    const int tile_x{i % chunk_size};
-    const int tile_y{i / chunk_size};
-    create_game_object(registry, chunk.at(static_cast<size_t>(i)),
-                       {static_cast<float>(tile_x) + static_cast<float>(chunk_pos.x * chunk_size),
-                        static_cast<float>(tile_y) + static_cast<float>(chunk_pos.y * chunk_size)});
+void generate_game_objects(Registry& registry, const Vec2i& chunk_pos, const int seed) {
+  const auto [tiles, enemy_positions]{generation::generate_chunk(chunk_pos, seed)};
+  constexpr int chunk_size{generation::CHUNK_SIZE};
+  Vec2i tile;
+  for (tile.y = 0; tile.y < chunk_size; tile.y++) {
+    for (tile.x = 0; tile.x < chunk_size; tile.x++) {
+      const auto index{static_cast<std::size_t>((tile.y * chunk_size) + tile.x)};
+      create_game_object(registry, tiles.at(index), convert_tile_to_world(tile, chunk_pos));
+    }
+  }
+  for (const Vec2i& enemy_pos : enemy_positions) {
+    create_game_object(registry, generation::TileType::Enemy, convert_tile_to_world(enemy_pos, chunk_pos));
   }
 }
 }  // namespace
@@ -41,15 +53,15 @@ void chunk_generation_system(Registry& registry) {
   for (const auto& [player, transform] : registry.view<components::Player, components::Transform>()) {
     const Vec2f player_position{transform.position};
     const Vec2i player_chunk_pos{
-        static_cast<int>(std::floor(player_position.x / static_cast<float>(generation::CHUNK_SIZE))),
-        static_cast<int>(std::floor(player_position.y / static_cast<float>(generation::CHUNK_SIZE)))};
+        static_cast<int>(std::floor(player_position.x / generation::CHUNK_SIZE)),
+        static_cast<int>(std::floor(player_position.y / generation::CHUNK_SIZE))};
     for (int chunk_x{-CHUNK_GENERATION_RADIUS}; chunk_x <= CHUNK_GENERATION_RADIUS; chunk_x++) {
       for (int chunk_y{-CHUNK_GENERATION_RADIUS}; chunk_y <= CHUNK_GENERATION_RADIUS; chunk_y++) {
         const Vec2i chunk_pos{player_chunk_pos.x + chunk_x, player_chunk_pos.y + chunk_y};
         if (get_generated_chunks().contains(chunk_pos)) {
           continue;
         }
-        generate_chunk(registry, chunk_pos, 0);
+        generate_game_objects(registry, chunk_pos, 0);
         get_generated_chunks().insert(chunk_pos);
       }
     }
