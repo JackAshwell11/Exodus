@@ -12,6 +12,7 @@ add_executable(exodus_core_tests
         ${CMAKE_SOURCE_DIR}/tests/test_engine.cpp
         ${CMAKE_SOURCE_DIR}/tests/test_factories.cpp
         ${CMAKE_SOURCE_DIR}/tests/test_math.cpp
+        ${CMAKE_SOURCE_DIR}/tests/test_steering.cpp
 )
 target_include_directories(exodus_core_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/tests

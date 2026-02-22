@@ -193,6 +193,14 @@ struct Vec2 {
   /// @param other The vector to compute the dot product with.
   /// @return The dot product as a scalar value.
   [[nodiscard]] constexpr auto dot(const Vec2& other) const noexcept -> T { return (x * other.x) + (y * other.y); }
+
+  /// Rotate the vector by a given angle in radians.
+  ///
+  /// @param angle The angle to rotate the vector by, in radians.
+  /// @return A new vector that is the result of rotating this vector by the specified angle.
+  [[nodiscard]] constexpr auto rotate(const T angle) const noexcept -> Vec2 {
+    return {x * std::cos(angle) - y * std::sin(angle), x * std::sin(angle) + y * std::cos(angle)};
+  }
 };
 
 // Type aliases for common vector types
