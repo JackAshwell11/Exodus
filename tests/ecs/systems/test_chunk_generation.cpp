@@ -1,4 +1,5 @@
 // Local headers
+#include "exodus/ecs/components/enemy.hpp"
 #include "exodus/ecs/components/player.hpp"
 #include "exodus/ecs/components/transform.hpp"
 #include "exodus/ecs/registry.hpp"
@@ -31,8 +32,8 @@ TEST_F(ChunkGenerationFixture, GeneratesChunksAroundPlayer) {
   chunk_generation_system(registry);
 
   // Chunk generation has a radius of 2 so 5x5 chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{102400};
-  ASSERT_EQ(registry.count(), 1 + expected_new_game_objects);  // Player is created too
+  constexpr std::size_t expected_new_game_objects{102400};  // The actual number is larger due to enemy counts
+  ASSERT_GT(registry.count(), 1 + expected_new_game_objects);  // Player is created too
 }
 
 /// Test that already generated chunks are not regenerated.
@@ -59,8 +60,8 @@ TEST_F(ChunkGenerationFixture, MovingPlayerGeneratesNewChunks) {
   chunk_generation_system(registry);
 
   // Should generate a 5x5 grid of chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{102400};
-  ASSERT_EQ(registry.count(), size_after_first + expected_new_game_objects);
+  constexpr std::size_t expected_new_game_objects{102400};  // The actual number is larger due to enemy counts
+  ASSERT_GT(registry.count(), size_after_first + expected_new_game_objects);
 }
 
 /// Test that multiple players are handled (this should realistically never happen).
@@ -74,8 +75,8 @@ TEST_F(ChunkGenerationFixture, MultiplePlayers) {
   chunk_generation_system(registry);
 
   // Should generate two 5x5 grids of chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{204800};
-  ASSERT_EQ(registry.count(), 2 + expected_new_game_objects);  // Both players are created too
+  constexpr std::size_t expected_new_game_objects{204800};  // The actual number is larger due to enemy counts
+  ASSERT_GT(registry.count(), 2 + expected_new_game_objects);  // Both players are created too
 }
 
 /// Test that chunks are generated for negative player positions.
@@ -86,8 +87,8 @@ TEST_F(ChunkGenerationFixture, GeneratesChunksAtNegativePositions) {
   chunk_generation_system(registry);
 
   // Chunk generation has a radius of 2 so 5x5 chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{102400};
-  ASSERT_EQ(registry.count(), 1 + expected_new_game_objects);
+  constexpr std::size_t expected_new_game_objects{102400};  // The actual number is larger due to enemy counts
+  ASSERT_GT(registry.count(), 1 + expected_new_game_objects);
 }
 
 /// Test that tile positions in negative chunks are correctly grid-aligned.
@@ -102,5 +103,15 @@ TEST_F(ChunkGenerationFixture, NegativeChunkTilePositionsAreGridAligned) {
     ASSERT_NEAR(transform.position.x - std::floor(transform.position.x), 0.0F, 1e-5F);
     ASSERT_NEAR(transform.position.y - std::floor(transform.position.y), 0.0F, 1e-5F);
   }
+}
+
+/// Test that enemy game objects are created by the chunk generation system.
+TEST_F(ChunkGenerationFixture, CreatesEnemyGameObjects) {
+  const GameObjectID player_id{registry.create()};
+  registry.add_component<components::Player>(player_id);
+  registry.add_component<components::Transform>(player_id, Vec2f{0.0F, 0.0F});
+  chunk_generation_system(registry);
+  constexpr std::size_t expected_enemy_count{697};
+  ASSERT_EQ(std::ranges::distance(registry.view<components::Enemy>()), expected_enemy_count);
 }
 }  // namespace exodus::ecs::systems

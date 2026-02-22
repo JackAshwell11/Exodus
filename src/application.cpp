@@ -14,21 +14,13 @@
 #include "exodus/ecs/systems/input.hpp"
 #include "exodus/engine.hpp"
 #include "exodus/factories.hpp"
+#include "exodus/generation/generator.hpp"
 #include "rendering/opengl_renderer.hpp"
 
 namespace {
 /// The flags to initialise SDL_image with.
 constexpr unsigned int IMG_INIT_FLAGS{static_cast<unsigned int>(IMG_INIT_PNG) |
                                       static_cast<unsigned int>(IMG_INIT_JPG)};
-
-/// The sprite paths for each tile type, indexed by TileType enum value.
-constexpr auto TILE_SPRITE_PATHS{std::to_array<std::string_view>({
-    "/sprites/player.png",
-    "/sprites/floor_grass.png",
-    "/sprites/floor_water.png",
-    "/sprites/floor_hills.png",
-    "/sprites/floor_mountain.png",
-})};
 
 /// The fixed delta time for physics and other fixed-step updates (60 FPS).
 constexpr float FIXED_TIMESTEP{1.0F / 60.0F};
@@ -85,15 +77,24 @@ auto load(const std::string_view path) -> GLuint {
 
 namespace exodus {
 namespace {
+/// The sprite paths for each tile type, indexed by TileType enum value.
+const std::unordered_map<generation::TileType, std::string_view> TILE_SPRITE_PATHS{
+    {generation::TileType::Player, "/sprites/player.png"},
+    {generation::TileType::Enemy, "/sprites/enemy.png"},
+    {generation::TileType::Grass, "/sprites/floor_grass.png"},
+    {generation::TileType::Water, "/sprites/floor_water.png"},
+    {generation::TileType::Hills, "/sprites/floor_hills.png"},
+    {generation::TileType::Mountain, "/sprites/floor_mountain.png"},
+};
+
 /// Load the textures for each tile type into the asset manager.
 void load_tile_textures() {
   std::unordered_map<generation::TileType, GLuint>& tile_textures{get_tile_textures()};
-  for (size_t idx{0}; idx < TILE_SPRITE_PATHS.size(); idx++) {
-    const auto tile_type{static_cast<generation::TileType>(idx)};
+  for (const auto& [tile_type, path] : TILE_SPRITE_PATHS) {
     if (tile_textures.contains(tile_type)) {
       continue;
     }
-    tile_textures[tile_type] = load(TILE_SPRITE_PATHS.at(idx));
+    tile_textures[tile_type] = load(path);
   }
 }
 
