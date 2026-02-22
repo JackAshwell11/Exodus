@@ -20,14 +20,14 @@ enum class TileType : std::uint8_t {
   Player,    // 0
   Grass,     // 1
   Water,     // 2
-  Sand,      // 3
+  Hills,     // 3
   Mountain,  // 4
 };
 
 /// Generate a chunk at a given position with a given seed.
 ///
 /// @param chunk_pos The position of the chunk in chunk coordinates.
-/// @param seed The seed for the random number generator.
+/// @param seed The seed for deterministic output.
 /// @return A vector of TileType representing the generated chunk.
-auto generate_chunk(Vec2i chunk_pos, int seed) -> std::array<TileType, CHUNK_TILE_COUNT>;
+auto generate_chunk(const Vec2i& chunk_pos, int seed) -> std::array<TileType, CHUNK_TILE_COUNT>;
 }  // namespace exodus::generation

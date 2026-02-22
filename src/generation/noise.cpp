@@ -106,7 +106,7 @@ constexpr auto gradient(const std::uint64_t seed, const exodus::Vec2u64& base_ha
 }  // namespace
 
 namespace exodus::generation {
-auto noise(const std::int64_t seed, const Vec2d pos) -> float {
+auto noise(const Vec2d& pos, const std::int64_t seed) -> float {
   // Skew the input space to determine which simplex cell we're in
   const Vec2d simplex_pos{pos + (SKEW_FACTOR * pos.sum())};
 

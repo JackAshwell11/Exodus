@@ -26,7 +26,7 @@ constexpr auto TILE_SPRITE_PATHS{std::to_array<std::string_view>({
     "/sprites/player.png",
     "/sprites/floor_grass.png",
     "/sprites/floor_water.png",
-    "/sprites/floor_sand.png",
+    "/sprites/floor_hills.png",
     "/sprites/floor_mountain.png",
 })};
 
