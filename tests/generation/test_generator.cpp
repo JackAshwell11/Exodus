@@ -52,7 +52,9 @@ TEST(GenerationTest, EnemiesOnlyAllowedTiles) {
 /// Test that some chunks contain enemies and some do not.
 TEST(GenerationTest, EnemyDensityStatisticalCheck) {
   constexpr int total_chunks{100};
-  constexpr auto empty_flags{std::views::iota(0, total_chunks) | std::views::transform([](const int i) { return generate_chunk({i, i}, 42).enemy_positions.empty(); })};
+  constexpr auto empty_flags{std::views::iota(0, total_chunks) | std::views::transform([](const int i) {
+                               return generate_chunk({i, i}, 42).enemy_positions.empty();
+                             })};
   const int chunks_without_enemies{static_cast<int>(std::ranges::count(empty_flags, true))};
   const int chunks_with_enemies{total_chunks - chunks_without_enemies};
   ASSERT_GT(chunks_with_enemies, 0);

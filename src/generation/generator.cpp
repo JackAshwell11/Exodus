@@ -60,6 +60,9 @@ constexpr float LAND_BIAS{0.08F};
 
 // ----- The OpenSimplex2S noise output range -----
 
+/// The scale used to map noise from [-1, 1] to [0, 1].
+constexpr float NOISE_MAP_SCALE{0.5F};
+
 /// The minimum expected output value of OpenSimplex2S noise.
 constexpr float OPENSIMPLEX2S_MIN{-1.0F};
 
@@ -97,9 +100,7 @@ auto fbm_noise(const Vec2d& pos, const int seed) -> float {
 ///
 /// @param noise The noise value to map (expected to be in the range [-1.0, 1.0])
 /// @return The mapped noise value in the range [0.0, 1.0]
-constexpr auto map_noise(const float noise) -> float {
-  return (noise + 1.0F) * 0.5F;
-}
+constexpr auto map_noise(const float noise) -> float { return (noise + 1.0F) * NOISE_MAP_SCALE; }
 
 /// Maps a noise elevation value to a TileType based on predefined thresholds.
 ///
@@ -145,7 +146,7 @@ auto generate_chunk(const Vec2i& chunk_pos, const int seed) -> ChunkData {
 
       // Perform the enemy pass to determine if an enemy should be placed on this tile
       if (can_spawn_enemy(terrain_tile) && map_noise(fbm_noise(world_pos * ENEMY_FREQUENCY, seed)) < ENEMY_THRESHOLD) {
-        chunk.enemy_positions.emplace(Vec2i{static_cast<int>(x), static_cast<int>(y)});
+        chunk.enemy_positions.emplace(static_cast<int>(x), static_cast<int>(y));
       }
     }
   }

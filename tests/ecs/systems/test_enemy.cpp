@@ -52,7 +52,7 @@ TEST_F(EnemyMovementFixture, SingleEnemySeeksPlayer) {
   registry.add_component<components::Velocity>(enemy_id, 1.0F);
   enemy_movement_system(registry);
   const Vec2f expected_direction{Vec2f{10.0F, 20.0F}.normalise()};
-  const  Vec2f& direction{registry.get_component<components::Velocity>(enemy_id).direction};
+  const Vec2f& direction{registry.get_component<components::Velocity>(enemy_id).direction};
   ASSERT_NEAR(direction.x, expected_direction.x, 1e-5F);
   ASSERT_NEAR(direction.y, expected_direction.y, 1e-5F);
 }

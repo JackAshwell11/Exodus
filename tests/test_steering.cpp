@@ -20,7 +20,6 @@ void assert_vec_near(const Vec2f& actual, const Vec2f& expected) {
 }
 }  // namespace
 
-
 /// Test if a larger current position produces the correct seek force.
 TEST(SteeringTest, SeekLargerCurrent) {
   constexpr Vec2f expected_seek_force{-0.70710677F, -0.70710677F};
@@ -34,9 +33,7 @@ TEST(SteeringTest, SeekLargerTarget) {
 }
 
 /// Test if two equal positions produce the correct seek force.
-TEST(SteeringTest, SeekEqual) {
-  assert_vec_near(seek({100, 100}, {100, 100}), Vec2f{});
-}
+TEST(SteeringTest, SeekEqual) { assert_vec_near(seek({100, 100}, {100, 100}), Vec2f{}); }
 
 /// Test if a negative current position produces the correct seek force.
 TEST(SteeringTest, SeekNegativeCurrent) {
@@ -51,9 +48,7 @@ TEST(SteeringTest, SeekNegativeTarget) {
 }
 
 /// Test if two negative positions produce the correct seek force.
-TEST(SteeringTest, SeekNegativePositions) {
-  assert_vec_near(seek({-50, -50}, {-50, -50}), Vec2f{});
-}
+TEST(SteeringTest, SeekNegativePositions) { assert_vec_near(seek({-50, -50}, {-50, -50}), Vec2f{}); }
 
 /// Test if a larger current position produces the correct flee force.
 TEST(SteeringTest, FleeLargerCurrent) {
@@ -68,9 +63,7 @@ TEST(SteeringTest, FleeLargerTarget) {
 }
 
 /// Test if two equal positions produce the correct flee force.
-TEST(SteeringTest, FleeEqual) {
-  assert_vec_near(flee({100, 100}, {100, 100}), Vec2f{});
-}
+TEST(SteeringTest, FleeEqual) { assert_vec_near(flee({100, 100}, {100, 100}), Vec2f{}); }
 
 /// Test if a negative current position produces the correct flee force.
 TEST(SteeringTest, FleeNegativeCurrent) {
@@ -85,9 +78,7 @@ TEST(SteeringTest, FleeNegativeTarget) {
 }
 
 /// Test if two negative positions produce the correct flee force.
-TEST(SteeringTest, FleeNegativePositions) {
-  assert_vec_near(flee({-50, -50}, {-50, -50}), Vec2f{});
-}
+TEST(SteeringTest, FleeNegativePositions) { assert_vec_near(flee({-50, -50}, {-50, -50}), Vec2f{}); }
 
 /// Test if a position outside the radius produces the correct arrive force.
 TEST(SteeringTest, ArriveOutsideSlowingRange) {
@@ -114,9 +105,7 @@ TEST(SteeringTest, ArriveNearTarget) {
 }
 
 /// Test if a position on the target produces the correct arrive force.
-TEST(SteeringTest, ArriveOnTarget) {
-  assert_vec_near(arrive({}, {}, 100), Vec2f{});
-}
+TEST(SteeringTest, ArriveOnTarget) { assert_vec_near(arrive({}, {}, 100), Vec2f{}); }
 
 /// Test if a non-moving target produces the correct pursue force.
 TEST(SteeringTest, PursueNonMovingTarget) {
@@ -163,8 +152,7 @@ TEST(SteeringTest, WanderNonMoving) {
 /// Test if a moving game object produces the correct wander force.
 TEST(SteeringTest, WanderMoving) {
   constexpr Vec2f expected_wander_force{0.76590121F, -0.64295828F};
-  assert_vec_near(wander({100, -100}, std::numbers::pi_v<float> / 3.0F),
-                expected_wander_force);
+  assert_vec_near(wander({100, -100}, std::numbers::pi_v<float> / 3.0F), expected_wander_force);
 }
 
 /// Test if a zero angle produces the correct wander force.

@@ -22,7 +22,8 @@ void enemy_movement_system(Registry& registry) {
   }
 
   // Steer the game object towards the player's position
-  for (const auto& [enemy, transform, velocity] : registry.view<components::Enemy, components::Transform, components::Velocity>()) {
+  for (const auto& [enemy, transform, velocity] :
+       registry.view<components::Enemy, components::Transform, components::Velocity>()) {
     velocity.direction = seek(transform.position, player_position);
   }
 }

@@ -81,10 +81,9 @@ void collision_resolution_system(Registry& registry) {
       // the target)
       const float body_one_distance_to_player{(iter_one->transform->position - player_position).length()};
       const float body_two_distance_to_player{(iter_two->transform->position - player_position).length()};
-      const float proximity{std::clamp(
-        std::max(body_one_distance_to_player, body_two_distance_to_player) / SWARM_RADIUS,
-        SWARM_COMPRESSION_NEAR_PLAYER,
-        1.0F)};
+      const float proximity{
+          std::clamp(std::max(body_one_distance_to_player, body_two_distance_to_player) / SWARM_RADIUS,
+                     SWARM_COMPRESSION_NEAR_PLAYER, 1.0F)};
 
       // Determine the correction magnitude based on how much the two bodies overlap
       const float penetration{target - actual_distance};

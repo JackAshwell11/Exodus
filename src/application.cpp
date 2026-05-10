@@ -2,8 +2,10 @@
 #include "exodus/application.hpp"
 
 // Std headers
+#include <array>
 #include <iostream>
 #include <ranges>
+#include <utility>
 
 // External headers
 #include <SDL.h>
@@ -78,13 +80,14 @@ auto load(const std::string_view path) -> GLuint {
 namespace exodus {
 namespace {
 /// The sprite paths for each tile type, indexed by TileType enum value.
-const std::unordered_map<generation::TileType, std::string_view> TILE_SPRITE_PATHS{
-    {generation::TileType::Player, "/sprites/player.png"},
-    {generation::TileType::Enemy, "/sprites/enemy.png"},
-    {generation::TileType::Grass, "/sprites/floor_grass.png"},
-    {generation::TileType::Water, "/sprites/floor_water.png"},
-    {generation::TileType::Hills, "/sprites/floor_hills.png"},
-    {generation::TileType::Mountain, "/sprites/floor_mountain.png"},
+using TileSpriteEntry = std::pair<generation::TileType, std::string_view>;
+constexpr std::array TILE_SPRITE_PATHS{
+    TileSpriteEntry{generation::TileType::Player, "/sprites/player.png"},
+    TileSpriteEntry{generation::TileType::Enemy, "/sprites/enemy.png"},
+    TileSpriteEntry{generation::TileType::Grass, "/sprites/floor_grass.png"},
+    TileSpriteEntry{generation::TileType::Water, "/sprites/floor_water.png"},
+    TileSpriteEntry{generation::TileType::Hills, "/sprites/floor_hills.png"},
+    TileSpriteEntry{generation::TileType::Mountain, "/sprites/floor_mountain.png"},
 };
 
 /// Load the textures for each tile type into the asset manager.
