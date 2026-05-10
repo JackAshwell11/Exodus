@@ -2,6 +2,7 @@
 #include "exodus/factories.hpp"
 
 // Local headers
+#include "exodus/ecs/components/collider.hpp"
 #include "exodus/ecs/components/enemy.hpp"
 #include "exodus/ecs/components/keyboard_controlled.hpp"
 #include "exodus/ecs/components/player.hpp"
@@ -10,12 +11,21 @@
 #include "exodus/ecs/components/velocity.hpp"
 #include "exodus/ecs/registry.hpp"
 #include "exodus/generation/generator.hpp"
+#include "exodus/world_config.hpp"
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers)
 namespace exodus {
 namespace {
 /// A sentinel value representing an uninitialised OpenGL texture ID (texture IDs start at 1).
 constexpr GLuint INVALID_TEXTURE_ID{0};
+
+/// The fraction of the player sprite size used for the collision radius. Higher values make the player more physically
+/// solid and harder to pass through.
+constexpr float PLAYER_COLLIDER_COVERAGE{0.9F};
+
+/// The fraction of the enemy sprite size used for the collision radius. Higher values make enemies occupy more space
+/// and reduces swarm density.
+constexpr float ENEMY_COLLIDER_COVERAGE{0.25F};
 
 /// The type of factory function to create a game object.
 using FactoryFn = void (*)(ecs::Registry&, ecs::GameObjectID, const Vec2f&, GLuint);
@@ -28,6 +38,7 @@ constexpr FactoryFn PLAYER_FACTORY{[](ecs::Registry& registry, const ecs::GameOb
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 1, 2.0F);
   registry.add_component<ecs::components::Transform>(game_object_id, position);
   registry.add_component<ecs::components::Velocity>(game_object_id, 200.0F);
+  registry.add_component<ecs::components::CircleCollider>(game_object_id, WorldConfig::SPRITE_SIZE * 0.5F * PLAYER_COLLIDER_COVERAGE);
 }};
 
 /// Add the components for the enemy game object.
@@ -35,7 +46,8 @@ constexpr FactoryFn ENEMY_FACTORY{[](ecs::Registry& registry, const ecs::GameObj
   registry.add_component<ecs::components::Enemy>(game_object_id);
   registry.add_component<ecs::components::Sprite>(game_object_id, texture_id, 1);
   registry.add_component<ecs::components::Transform>(game_object_id, position);
-  registry.add_component<ecs::components::Velocity>(game_object_id, 100.0F);
+  registry.add_component<ecs::components::Velocity>(game_object_id, 20.0F);
+  registry.add_component<ecs::components::CircleCollider>(game_object_id, WorldConfig::SPRITE_SIZE * 0.5F * ENEMY_COLLIDER_COVERAGE);
 }};
 
 /// Add the components for the terrain game object.

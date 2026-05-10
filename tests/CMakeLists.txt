@@ -2,6 +2,8 @@
 add_executable(exodus_core_tests
         ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_camera_follow.cpp
         ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_chunk_generation.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_collision_resolution.cpp
+        ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_enemy.cpp
         ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_input.cpp
         ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_movement.cpp
         ${CMAKE_SOURCE_DIR}/tests/ecs/systems/test_sprite_render.cpp
