@@ -52,9 +52,8 @@ auto get_generated_chunks() -> std::unordered_set<Vec2i>& {
 void chunk_generation_system(Registry& registry) {
   for (const auto& [player, transform] : registry.view<components::Player, components::Transform>()) {
     const Vec2f player_position{transform.position};
-    const Vec2i player_chunk_pos{
-        static_cast<int>(std::floor(player_position.x / generation::CHUNK_SIZE)),
-        static_cast<int>(std::floor(player_position.y / generation::CHUNK_SIZE))};
+    const Vec2i player_chunk_pos{static_cast<int>(std::floor(player_position.x / generation::CHUNK_SIZE)),
+                                 static_cast<int>(std::floor(player_position.y / generation::CHUNK_SIZE))};
     for (int chunk_x{-CHUNK_GENERATION_RADIUS}; chunk_x <= CHUNK_GENERATION_RADIUS; chunk_x++) {
       for (int chunk_y{-CHUNK_GENERATION_RADIUS}; chunk_y <= CHUNK_GENERATION_RADIUS; chunk_y++) {
         const Vec2i chunk_pos{player_chunk_pos.x + chunk_x, player_chunk_pos.y + chunk_y};

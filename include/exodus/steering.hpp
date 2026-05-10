@@ -38,8 +38,8 @@ constexpr auto flee(const Vec2f& current_position, const Vec2f& target_position)
 /// @param target_position The position of the target game object.
 /// @param slowing_radius The distance from the target at which the game object should start slowing down.
 /// @return The calculated steering force for the arrival behaviour.
-constexpr auto arrive(const Vec2f& current_position, const Vec2f& target_position, const float slowing_radius)
-    -> Vec2f {
+constexpr auto arrive(const Vec2f& current_position, const Vec2f& target_position,
+                      const float slowing_radius) -> Vec2f {
   const Vec2f direction{target_position - current_position};
   const float distance{direction.length()};
   if (distance == 0.0F) {
@@ -54,8 +54,8 @@ constexpr auto arrive(const Vec2f& current_position, const Vec2f& target_positio
 /// @param target_position The position of the target game object.
 /// @param target_velocity The velocity of the target game object.
 /// @return The calculated steering force for the pursuit behaviour.
-constexpr auto pursue(const Vec2f& current_position, const Vec2f& target_position, const Vec2f& target_velocity)
-    -> Vec2f {
+constexpr auto pursue(const Vec2f& current_position, const Vec2f& target_position,
+                      const Vec2f& target_velocity) -> Vec2f {
   return seek(current_position, target_position + target_velocity);
 }
 
@@ -65,8 +65,8 @@ constexpr auto pursue(const Vec2f& current_position, const Vec2f& target_positio
 /// @param target_position The position of the target game object.
 /// @param target_velocity The velocity of the target game object.
 /// @return The calculated steering force for the evasion behaviour.
-constexpr auto evade(const Vec2f& current_position, const Vec2f& target_position, const Vec2f& target_velocity)
-    -> Vec2f {
+constexpr auto evade(const Vec2f& current_position, const Vec2f& target_position,
+                     const Vec2f& target_velocity) -> Vec2f {
   return flee(current_position, target_position + target_velocity);
 }
 
@@ -81,5 +81,3 @@ constexpr auto wander(const Vec2f& current_velocity, const float displacement_an
   return (forward * WANDER_CIRCLE_DISTANCE + displacement).normalise();
 }
 }  // namespace exodus
-
-

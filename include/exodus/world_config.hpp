@@ -19,4 +19,4 @@ struct WorldConfig {
   /// The size of the world in pixels.
   static constexpr Vec2f SCREEN_SIZE{1280.0F, 720.0F};
 };
-} // namespace exodus
+}  // namespace exodus

@@ -32,7 +32,7 @@ TEST_F(ChunkGenerationFixture, GeneratesChunksAroundPlayer) {
   chunk_generation_system(registry);
 
   // Chunk generation has a radius of 2 so 5x5 chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{102400};  // The actual number is larger due to enemy counts
+  constexpr std::size_t expected_new_game_objects{102400};     // The actual number is larger due to enemy counts
   ASSERT_GT(registry.count(), 1 + expected_new_game_objects);  // Player is created too
 }
 
@@ -75,7 +75,7 @@ TEST_F(ChunkGenerationFixture, MultiplePlayers) {
   chunk_generation_system(registry);
 
   // Should generate two 5x5 grids of chunks each with CHUNK_SIZE*CHUNK_SIZE (4096) tiles
-  constexpr std::size_t expected_new_game_objects{204800};  // The actual number is larger due to enemy counts
+  constexpr std::size_t expected_new_game_objects{204800};     // The actual number is larger due to enemy counts
   ASSERT_GT(registry.count(), 2 + expected_new_game_objects);  // Both players are created too
 }
 
