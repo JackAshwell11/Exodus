@@ -39,18 +39,18 @@ class Engine {
   /// Process update logic for the game engine.
   ///
   /// @param delta_time The time interval since the last time the function was called.
-  void update(float delta_time);
+  void update(float delta_time) const;
 
   /// Process fixed update logic for the game engine.
   ///
   /// @param delta_time The time interval since the last time the function was called.
-  void fixed_update(float delta_time);
+  void fixed_update(float delta_time) const;
 
   /// Process rendering logic for the game engine.
   ///
   /// @param delta_time The time interval since the last time the function was called.
   /// @param renderer The renderer to use for drawing to the screen.
-  void render(float delta_time, rendering::Renderer& renderer);
+  void render(float delta_time, rendering::Renderer& renderer) const;
 
  private:
   /// Manages game objects and their components.

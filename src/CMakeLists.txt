@@ -2,6 +2,8 @@
 add_library(exodus_core STATIC
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/camera_follow.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/chunk_generation.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/collision_resolution.cpp
+        ${CMAKE_SOURCE_DIR}/src/ecs/systems/enemy.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/input.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/movement.cpp
         ${CMAKE_SOURCE_DIR}/src/ecs/systems/sprite_render.cpp

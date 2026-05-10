@@ -9,6 +9,8 @@
 #include "exodus/ecs/registry.hpp"
 #include "exodus/ecs/systems/camera_follow.hpp"
 #include "exodus/ecs/systems/chunk_generation.hpp"
+#include "exodus/ecs/systems/collision_resolution.hpp"
+#include "exodus/ecs/systems/enemy.hpp"
 #include "exodus/ecs/systems/input.hpp"
 #include "exodus/ecs/systems/movement.hpp"
 #include "exodus/ecs/systems/sprite_render.hpp"
@@ -60,24 +62,43 @@ void run_systems(ecs::Registry& registry, Camera& camera,
 }
 }  // namespace
 
-Engine::Engine() : registry_(std::make_unique<ecs::Registry>()), camera_(std::make_unique<Camera>()) {
+Engine::Engine()
+  : registry_(std::make_unique<ecs::Registry>())
+  , camera_(std::make_unique<Camera>()) {
   create_game_object(*registry_, generation::TileType::Player, PLAYER_POSITION);
 }
 
 Engine::~Engine() = default;
 
-void Engine::update(const float delta_time) {
-  run_systems<ecs::systems::chunk_generation_system, ecs::systems::camera_follow_system>(*registry_, *camera_,
-                                                                                         std::nullopt, delta_time);
+void Engine::update(const float delta_time) const {
+  run_systems<
+    ecs::systems::chunk_generation_system,
+    ecs::systems::camera_follow_system>(
+      *registry_,
+      *camera_,
+      std::nullopt,
+      delta_time);
 }
 
-void Engine::fixed_update(const float delta_time) {
-  run_systems<ecs::systems::input_system, ecs::systems::movement_system>(*registry_, *camera_, std::nullopt,
-                                                                         delta_time);
+void Engine::fixed_update(const float delta_time) const {
+  run_systems<
+    ecs::systems::input_system,
+    ecs::systems::enemy_movement_system,
+    ecs::systems::movement_system,
+    ecs::systems::collision_resolution_system>(
+      *registry_,
+      *camera_,
+      std::nullopt,
+      delta_time);
 }
 
-void Engine::render(const float delta_time, rendering::Renderer& renderer) {
-  run_systems<ecs::systems::sprite_render_system>(*registry_, *camera_, renderer, delta_time);
+void Engine::render(const float delta_time, rendering::Renderer& renderer) const {
+  run_systems<
+    ecs::systems::sprite_render_system>(
+      *registry_,
+      *camera_,
+      renderer,
+      delta_time);
   renderer.flush();
 }
 }  // namespace exodus
